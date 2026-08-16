@@ -3,12 +3,22 @@
   "scripts": {
     "build": "vite build",
     "dev": "vite dev",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:cov": "vitest run --coverage",
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@types/node": "latest",
+    "@vitest/coverage-v8": "^4.1.10",
+    "msw": "^2.15.0",
     "nitro": "latest",
     "typescript": "latest",
-    "vite": "latest"
+    "vite": "latest",
+    "vitest": "^4.1.10"
+  },
+  "dependencies": {
+    "ofetch": "^1.5.1"
   }
 }
