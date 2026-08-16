@@ -98,6 +98,10 @@ Prereqs: [`wrangler`](https://developers.cloudflare.com/workers/wrangler/install
    ]
    ```
 
+## Credits
+
+Trophy artwork (`public/favicon.svg`, `app/assets/trophy.svg`) is the 🏆 glyph from [Twemoji](https://github.com/jdecked/twemoji) — © Twitter, Inc. and contributors, [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+
 ## License
 
 MIT.
