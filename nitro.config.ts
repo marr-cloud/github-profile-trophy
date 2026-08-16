@@ -1,7 +1,7 @@
 import { defineConfig } from "nitro";
 
 const trophyDriver = process.env.NITRO_STORAGE_TROPHY_DRIVER ?? "memory";
-const trophyStorage: any = { driver: trophyDriver };
+const trophyStorage: Record<string, unknown> = { driver: trophyDriver };
 if (trophyDriver === "fs") {
   trophyStorage.base = process.env.NITRO_STORAGE_TROPHY_PATH ?? ".data/trophy";
 }
@@ -16,7 +16,7 @@ export default defineConfig({
   compatibilityDate: "2026-08-15",
   serverDir: "./server",
   storage: {
-    "cache:trophy": trophyStorage,
+    "cache:trophy": trophyStorage as unknown as never,
   },
   runtimeConfig: {
     githubTokens: process.env.GITHUB_TOKEN ?? "",
