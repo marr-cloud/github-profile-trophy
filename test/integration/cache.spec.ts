@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach } from "vitest";
+import { describe, expect, it } from "vitest";
 import { createStorage } from "unstorage";
 import memoryDriver from "unstorage/drivers/memory";
 import { UserInfo } from "~/lib/trophy/user-info.ts";

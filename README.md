@@ -9,7 +9,7 @@ Byte-similar reimplementation of [ryo-ma/github-profile-trophy](https://github.c
 | Param      | Default | Notes                                                 |
 |------------|---------|-------------------------------------------------------|
 | username   | (req'd) | GitHub login                                          |
-| theme      | default | 24 themes; unknown → default                          |
+| theme      | default | 25 themes; unknown → default                          |
 | column     | 8       | `-1` = adaptive width                                 |
 | row        | 3       |                                                       |
 | margin-w   | 0       |                                                       |

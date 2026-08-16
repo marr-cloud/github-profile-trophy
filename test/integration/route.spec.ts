@@ -73,7 +73,7 @@ describe("GET / (real production route)", () => {
   it("missing username returns 400 HTML with cache header", async () => {
     const r = await invoke(realRouteApp(), "/");
     expect(r.status).toBe(400);
-    expect(r.headers.get("content-type")).toMatch(/text\/html/);
+    expect(r.headers.get("content-type")).toBe("text/html; charset=utf-8");
     expect(r.headers.get("cache-control")).toBe(CACHE_HEADER);
     expect(r.body).toContain('name="username"');
   });
@@ -81,7 +81,7 @@ describe("GET / (real production route)", () => {
   it("returns 502 HTML when no GitHub token is configured", async () => {
     const r = await invoke(realRouteApp(), "/?username=someone");
     expect(r.status).toBe(502);
-    expect(r.headers.get("content-type")).toMatch(/text\/html/);
+    expect(r.headers.get("content-type")).toBe("text/html; charset=utf-8");
     expect(r.headers.get("cache-control")).toBe(CACHE_HEADER);
     expect(r.body).toContain("no GitHub token");
   });
@@ -104,7 +104,7 @@ describe("GET / (pure core, injected dependencies)", () => {
 
     const r1 = await invoke(app, "/?username=torvalds&theme=onedark");
     expect(r1.status).toBe(200);
-    expect(r1.headers.get("content-type")).toMatch(/image\/svg\+xml/);
+    expect(r1.headers.get("content-type")).toBe("image/svg+xml; charset=utf-8");
     expect(r1.headers.get("cache-control")).toBe(CACHE_HEADER);
     expect(r1.body).toContain("<svg");
 
@@ -125,7 +125,7 @@ describe("GET / (pure core, injected dependencies)", () => {
 
     const r = await invoke(app, "/?username=other");
     expect(r.status).toBe(419);
-    expect(r.headers.get("content-type")).toMatch(/text\/html/);
+    expect(r.headers.get("content-type")).toBe("text/html; charset=utf-8");
     expect(r.headers.get("cache-control")).toBe(CACHE_HEADER);
   });
 
@@ -141,7 +141,7 @@ describe("GET / (pure core, injected dependencies)", () => {
 
     const r = await invoke(app, "/?username=ghost");
     expect(r.status).toBe(404);
-    expect(r.headers.get("content-type")).toMatch(/text\/html/);
+    expect(r.headers.get("content-type")).toBe("text/html; charset=utf-8");
     expect(r.headers.get("cache-control")).toBe(CACHE_HEADER);
   });
 
@@ -157,7 +157,7 @@ describe("GET / (pure core, injected dependencies)", () => {
 
     const r = await invoke(app, "/?username=other");
     expect(r.status).toBe(502);
-    expect(r.headers.get("content-type")).toMatch(/text\/html/);
+    expect(r.headers.get("content-type")).toBe("text/html; charset=utf-8");
     expect(r.headers.get("cache-control")).toBe(CACHE_HEADER);
   });
 });
