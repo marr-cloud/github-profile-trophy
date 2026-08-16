@@ -3,30 +3,27 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <link rel="icon" type="image/svg+xml" href="/nitro.svg" />
-    <title>Nitro + Vite</title>
-    <style>
-      @import "./app/assets/main.css";
-    </style>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>GitHub Profile Trophy</title>
+    <style>@import "./app/assets/main.css";</style>
   </head>
   <body>
     <main>
-      <div>
-        <div>
-          <a href="https://nitro.build/" target="_blank">
-            <img
-              src="/app/assets/nitro.svg"
-              class="logo nitro"
-              alt="Nitro logo"
-            />
-          </a>
-          <a href="https://vite.dev" target="_blank">
-            <img src="/app/assets/vite.svg" class="logo" alt="Vite logo" />
-          </a>
-          <h1>Nitro + Vite</h1>
-          <div id="app" class="card"></div>
-        </div>
-      </div>
+      <section class="hero">
+        <img src="/app/assets/trophy.svg" alt="Trophy" class="logo" />
+        <h1>GitHub Profile Trophy</h1>
+        <p>Add dynamically generated GitHub stat trophies to your README.</p>
+      </section>
+      <section class="preview">
+        <form id="preview-form">
+          <label for="username">GitHub username</label>
+          <input id="username" name="username" type="text" placeholder="octocat" required />
+          <label for="theme">Theme</label>
+          <input id="theme" name="theme" type="text" value="onedark" />
+          <button type="submit">Show trophies</button>
+        </form>
+        <div id="preview-out"></div>
+      </section>
       <script type="module" src="/app/entry-client.ts"></script>
     </main>
   </body>
