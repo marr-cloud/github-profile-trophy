@@ -29,9 +29,12 @@ Example: `<img src="https://YOUR-HOST/?username=torvalds&theme=onedark&column=7"
 | `GITHUB_TOKEN1`, `GITHUB_TOKEN2`| Upstream-compat aliases                          | —                |
 | `NITRO_PRESET`                  | Deploy target                                    | `node-server`    |
 | `NITRO_STORAGE_TROPHY_DRIVER`   | `memory` / `redis` / `fs` / `cloudflare-kv-binding` | `memory`      |
+| `NITRO_STORAGE_TROPHY_BINDING`  | KV binding name when driver=cloudflare-kv-binding | `TROPHY_KV`     |
 | `REDIS_URL`                     | when driver=redis                                | —                |
 | `NITRO_STORAGE_TROPHY_PATH`     | when driver=fs                                   | `.data/trophy`   |
 | `TROPHY_GITHUB_ENDPOINT`        | override GraphQL URL (GHES/tests)                | `https://api.github.com/graphql` |
+
+On Cloudflare Workers, set the runtime token via `wrangler secret put NITRO_GITHUB_TOKENS` — Nitro maps `NITRO_*` env vars into `useRuntimeConfig()` at runtime (see the Cloudflare deploy section below).
 
 ## Develop
 
@@ -49,10 +52,54 @@ Pick your preset and build:
 
 ```bash
 NITRO_PRESET=vercel pnpm build
-NITRO_PRESET=cloudflare-module pnpm build
+NITRO_PRESET=cloudflare_module pnpm build
 NITRO_PRESET=deno-deploy pnpm build
 NITRO_PRESET=node-server pnpm build
 ```
+
+### Cloudflare Workers (with KV cache)
+
+Prereqs: [`wrangler`](https://developers.cloudflare.com/workers/wrangler/install-and-update/) installed and logged in (`wrangler login`), and a GitHub PAT with `public_repo` + `read:user` scopes (create at <https://github.com/settings/tokens>).
+
+1. **Create the KV namespace** and copy the returned `id`:
+
+   ```bash
+   wrangler kv namespace create trophy_cache
+   ```
+
+2. **Paste that id** into `wrangler.jsonc` (replace `REPLACE_WITH_KV_NAMESPACE_ID`).
+
+3. **Build for Cloudflare**:
+
+   ```bash
+   NITRO_PRESET=cloudflare_module \
+   NITRO_STORAGE_TROPHY_DRIVER=cloudflare-kv-binding \
+   NITRO_STORAGE_TROPHY_BINDING=TROPHY_KV \
+   pnpm build
+   ```
+
+4. **Store your GitHub PAT** as a Worker secret. Nitro maps `NITRO_*` env vars into `useRuntimeConfig()` at runtime, so use this exact name:
+
+   ```bash
+   wrangler secret put NITRO_GITHUB_TOKENS
+   # paste your PAT when prompted (comma-separated for multiple tokens)
+   ```
+
+5. **Deploy**:
+
+   ```bash
+   wrangler deploy
+   ```
+
+6. **Test** at `https://github-profile-trophy.<your-account>.workers.dev/?username=<your-github>&theme=onedark`.
+
+7. **Custom domain** (optional; only if the zone is in your Cloudflare account): add a `routes` block to `wrangler.jsonc` and redeploy:
+
+   ```jsonc
+   "routes": [
+     { "pattern": "trophy.infraforge.cc/*", "zone_name": "infraforge.cc", "custom_domain": true }
+   ]
+   ```
 
 ## License
 
