@@ -17,7 +17,7 @@ describe("TrophyList", () => {
   it("filterByHidden hides secret trophies with UNKNOWN rank", () => {
     const list = new TrophyList(load("user-empty"));
     list.filterByHidden();
-    expect(list.length).toBe(7); // only the 7 non-hidden base trophies remain
+    expect(list.length).toBe(8); // 7 base + Experience (non-hidden, has rank)
     for (const t of list.getArray) expect(t.hidden).toBe(false);
   });
   it("filterByTitles keeps only requested titles", () => {
