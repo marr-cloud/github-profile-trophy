@@ -15,6 +15,7 @@
     "msw": "^2.15.0",
     "nitro": "latest",
     "typescript": "latest",
+    "unstorage": "^1.17.5",
     "vite": "latest",
     "vitest": "^4.1.10"
   },
