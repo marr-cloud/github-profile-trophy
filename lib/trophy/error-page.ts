@@ -153,7 +153,7 @@ export function renderMissingUsernameForm(baseUrl: string): string {
         <label for="username">GitHub Username</label>
         <input type="text" name="username" id="username" placeholder="Ex. gabriel-logan" required>
         <label for="theme">Theme (Optional)</label>
-        <input type="text" name="theme" id="theme" placeholder="Ex. onedark" value="flat">
+        <input type="text" name="theme" id="theme" placeholder="Ex. onedark" value="onedark">
         <br>
         <button type="submit">Get Trophies</button>
       </form>
