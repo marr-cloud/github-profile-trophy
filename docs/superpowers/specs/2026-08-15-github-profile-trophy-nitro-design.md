@@ -8,7 +8,7 @@
 
 Reimplement `ryo-ma/github-profile-trophy` on top of **Nitro v3 + Vite + h3** so the same URL (`GET /?username=...`) returns a byte-similar SVG, while removing the Deno-only runtime coupling and letting the app deploy to any Nitro preset (node-server, vercel, cloudflare, deno-deploy, netlify, bun, aws-lambda, …).
 
-The port keeps 100 % of the visible surface: same query parameters, same 24 themes, same 15 trophies, same rank ladder, same Cache-Control semantics, same SVG geometry (viewBox / panel size / animations).
+The port keeps 100 % of the visible surface: same query parameters, same 25 themes, same 15 trophies, same rank ladder, same Cache-Control semantics, same SVG geometry (viewBox / panel size / animations).
 
 ## 2. Goals and non-goals
 
@@ -53,7 +53,7 @@ Parsing helpers mirror upstream `CustomURLSearchParams`:
 - `getStringValue`, `getNumberValue` (NaN → default), `getBooleanValue` (`"true"` = true).
 - `title` / `rank` collected via `params.getAll(key).flatMap(s => s.split(",")).map(trim)`.
 
-### 3.3 Themes (24)
+### 3.3 Themes (25)
 
 `default, flat, onedark, gruvbox, dracula, monokai, chalk, nord, alduin, darkhub, juicyfresh, buddhism, oldie, radical, onestar, discord, algolia, gitdimmed, tokyonight, matrix, apprentice, dark_dimmed, dark_lover, kimbie_dark, aura`.
 
@@ -131,7 +131,7 @@ The `~/lib/trophy` core has **no** Nitro / h3 / Node imports. Every function is 
 ```
 lib/trophy/
   utils.ts              # RANK enum, RANK_ORDER, CONSTANTS, abridgeScore, CustomURLSearchParams
-  theme.ts              # Theme interface + COLORS record (24 themes)
+  theme.ts              # Theme interface + COLORS record (25 themes)
   icons.ts              # leafIcon, getTrophyIcon, getNextRankBar
   trophy.ts             # Trophy base class + 15 subclasses
   trophy-list.ts        # TrophyList (filters + sort)
@@ -296,14 +296,14 @@ Toolchain: `vitest`, `@vitest/coverage-v8`, `msw` (mock GitHub), `@vitest/ui` (d
 - `user-info.spec.ts` — derivations against fixtures: earliest repo, language set, ancient/og/joined2020 flags.
 - `trophy.spec.ts` — each of 15 classes: correct rank at each threshold ± 1 and correct progress bar % at mid-tier.
 - `trophy-list.spec.ts` — `filterByHidden`, `filterByTitles`, `filterByExclusionTitles`, `filterByRanks` (including `-` prefix), `sortByRank`, `isAllSRank` recomputed after filters.
-- `theme.spec.ts` — 24 themes present, each has all 22 keys, no undefineds.
+- `theme.spec.ts` — 25 themes present, each has all 22 keys, no undefineds.
 - `icons.spec.ts` — `getTrophyIcon` picks correct base/shadow/text per rank family; laurel present for A/S; secret gradient uses `SECRET_RANK_*`.
 - `card.spec.ts` — layout math: width/height for column=-1, column=8, row cap, margin arithmetic.
 - `github.spec.ts` — msw handlers: 200 happy path, 401 → 404, 429 → 419, 500 → 502, token rotation stops on auth error.
 
 **Integration suites** (adapter through Nitro):
 - Boot a Nitro test app via `@nitro/test-utils` (or manual `createApp`).
-- `route.svg.spec.ts` — end-to-end: mocked GitHub → response matches golden SVG (per (theme × subset) matrix, ~10 fixtures — not 24×15).
+- `route.svg.spec.ts` — end-to-end: mocked GitHub → response matches golden SVG (per (theme × subset) matrix, ~10 fixtures — not 25×15).
 - `route.errors.spec.ts` — missing username returns 400 HTML, ratelimit returns 419 HTML with cache header.
 - `cache.spec.ts` — second call hits storage, GitHub called once.
 
