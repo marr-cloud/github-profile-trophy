@@ -7,11 +7,14 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:cov": "vitest run --coverage",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "build:cf": "cross-env NITRO_PRESET=cloudflare_module NITRO_STORAGE_TROPHY_DRIVER=cloudflare-kv-binding NITRO_STORAGE_TROPHY_BINDING=TROPHY_KV vite build",
+    "deploy:cf": "pnpm build:cf && wrangler deploy"
   },
   "devDependencies": {
     "@types/node": "latest",
     "@vitest/coverage-v8": "^4.1.10",
+    "cross-env": "^10.1.0",
     "msw": "^2.15.0",
     "nitro": "latest",
     "typescript": "latest",

@@ -69,13 +69,10 @@ Prereqs: [`wrangler`](https://developers.cloudflare.com/workers/wrangler/install
 
 2. **Paste that id** into `wrangler.jsonc` (replace `REPLACE_WITH_KV_NAMESPACE_ID`).
 
-3. **Build for Cloudflare**:
+3. **Build for Cloudflare** (works in bash / zsh / PowerShell / cmd via `cross-env`):
 
    ```bash
-   NITRO_PRESET=cloudflare_module \
-   NITRO_STORAGE_TROPHY_DRIVER=cloudflare-kv-binding \
-   NITRO_STORAGE_TROPHY_BINDING=TROPHY_KV \
-   pnpm build
+   pnpm build:cf
    ```
 
 4. **Store your GitHub PAT** as a Worker secret. Nitro maps `NITRO_*` env vars into `useRuntimeConfig()` at runtime, so use this exact name:
@@ -85,7 +82,7 @@ Prereqs: [`wrangler`](https://developers.cloudflare.com/workers/wrangler/install
    # paste your PAT when prompted (comma-separated for multiple tokens)
    ```
 
-5. **Deploy**:
+5. **Deploy** (or use `pnpm deploy:cf` to build + deploy in one step):
 
    ```bash
    wrangler deploy
