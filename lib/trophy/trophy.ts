@@ -60,11 +60,11 @@ export class Trophy {
   }
   render(
     theme: Theme,
-    x = 0,
-    y = 0,
-    panelSize = CONSTANTS.DEFAULT_PANEL_SIZE,
-    noBackground = CONSTANTS.DEFAULT_NO_BACKGROUND,
-    noFrame = CONSTANTS.DEFAULT_NO_FRAME,
+    x: number = 0,
+    y: number = 0,
+    panelSize: number = CONSTANTS.DEFAULT_PANEL_SIZE,
+    noBackground: boolean = CONSTANTS.DEFAULT_NO_BACKGROUND,
+    noFrame: boolean = CONSTANTS.DEFAULT_NO_FRAME,
   ): string {
     const { BACKGROUND: PRIMARY, TITLE: SECONDARY, TEXT, NEXT_RANK_BAR } =
       theme;
