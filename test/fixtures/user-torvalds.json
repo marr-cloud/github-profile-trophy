@@ -1,0 +1,20 @@
+{
+  "createdAt": "2011-09-03T15:26:22Z",
+  "contributionsCollection": {
+    "totalCommitContributions": 3000,
+    "restrictedContributionsCount": 200,
+    "totalPullRequestReviewContributions": 90
+  },
+  "organizations": { "totalCount": 5 },
+  "followers": { "totalCount": 180000 },
+  "openIssues": { "totalCount": 20 },
+  "closedIssues": { "totalCount": 120 },
+  "pullRequests": { "totalCount": 400 },
+  "repositories": {
+    "totalCount": 8,
+    "nodes": [
+      { "languages": { "nodes": [{ "name": "C" }, { "name": "Shell" }] }, "stargazerCount": 170000, "createdAt": "2011-09-04T22:48:11Z" },
+      { "languages": { "nodes": [{ "name": "C" }] }, "stargazerCount": 12000, "createdAt": "2013-05-20T12:00:00Z" }
+    ]
+  }
+}

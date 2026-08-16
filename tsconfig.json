@@ -3,6 +3,8 @@
   "compilerOptions": {
     "paths": {
       "~/*": ["./*"]
-    }
-  }
+    },
+    "types": ["node", "vitest/globals"]
+  },
+  "include": ["app/**/*.ts", "lib/**/*.ts", "server/**/*.ts", "test/**/*.ts", "*.ts"]
 }

@@ -1,3 +1,2 @@
-import { setupApp } from "./app";
-
-setupApp(document.querySelector<HTMLButtonElement>("#app")!);
+import { setupApp } from "./app.ts";
+setupApp(document.querySelector<HTMLElement>("main")!);
