@@ -22,5 +22,8 @@
 			"binding": "TROPHY_KV",
 			"id": "8a3cae7ae76b409e8aa4ab9185f3d1d7"
 		}
-	]
+	],
+	"assets": {
+		"not_found_handling": "none"
+	}
 }
