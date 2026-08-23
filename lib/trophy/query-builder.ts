@@ -65,12 +65,12 @@ export function renderQueryBuilder(baseUrl: string): string {
     .join("");
   const titleBoxes = TITLE_OPTIONS
     .map((t) =>
-      `<label><input type="checkbox" name="title" value="${t}"> ${t}</label>`
+      `<label class="chip"><input type="checkbox" name="title" value="${t}"><span>${t}</span></label>`
     )
     .join("");
   const rankBoxes = RANK_OPTIONS
     .map((r) =>
-      `<label><input type="checkbox" name="rank" value="${r}"> ${r}</label>`
+      `<label class="chip"><input type="checkbox" name="rank" value="${r}"><span>${r}</span></label>`
     )
     .join("");
 
@@ -97,8 +97,13 @@ export function renderQueryBuilder(baseUrl: string): string {
   .toggles { display: flex; gap: 1.25rem; flex-wrap: wrap; }
   .toggles label { display: inline-flex; align-items: center; gap: 0.4rem; margin: 0; }
   .toggles input[type="checkbox"] { margin: 0; }
-  .checkgroup { display: grid; grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)); gap: 0.25rem 0.5rem; max-height: 12rem; overflow-x: hidden; overflow-y: auto; padding: 0.5rem 0.75rem; border: 1px solid var(--pico-form-element-border-color); border-radius: var(--pico-border-radius); background: var(--pico-form-element-background-color); }
-  .checkgroup label { display: inline-flex; align-items: center; gap: 0.3rem; margin: 0; min-width: 0; font-size: 0.82rem; font-weight: 400; overflow-wrap: anywhere; }
+  .checkgroup { display: flex; flex-wrap: wrap; gap: 0.4rem; max-height: 12rem; overflow-x: hidden; overflow-y: auto; padding: 0.6rem 0.7rem; border: 1px solid var(--pico-form-element-border-color); border-radius: var(--pico-border-radius); background: var(--pico-form-element-background-color); }
+  .chip { display: inline-block; margin: 0; cursor: pointer; }
+  .chip input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+  .chip span { display: inline-block; padding: 0.28rem 0.7rem; border: 1px solid var(--pico-form-element-border-color); border-radius: 999px; font-size: 0.82rem; line-height: 1.2; color: var(--pico-color); background: var(--pico-background-color); transition: background-color 0.12s, color 0.12s, border-color 0.12s; user-select: none; }
+  .chip:hover span { border-color: var(--pico-primary); }
+  .chip input:checked + span { background: var(--pico-primary); color: var(--pico-primary-inverse); border-color: var(--pico-primary); }
+  .chip input:focus-visible + span { outline: 2px solid var(--pico-primary-focus); outline-offset: 2px; }
   .checkgroup input[type="checkbox"] { margin: 0; }
   .hint { color: var(--pico-muted-color); font-size: 0.8rem; margin-top: 0.35rem; }
   .preview-frame { min-height: 260px; display: flex; align-items: center; justify-content: center; background: var(--pico-form-element-background-color); border: 1px dashed var(--pico-form-element-border-color); border-radius: var(--pico-border-radius); padding: 1rem; margin-bottom: 1rem; }
