@@ -200,6 +200,10 @@ export function renderQueryBuilder(baseUrl: string): string {
           <input id="url" readonly value="${safeBase}?username=octocat">
           <button type="button" id="copy">Copy URL</button>
         </div>
+        <div class="url-row">
+          <input id="markdown" readonly value="[![trophy](${safeBase}?username=octocat)](https://github.com/octocat)">
+          <button type="button" id="copy-md">Copy Markdown</button>
+        </div>
         <div id="copy-status" aria-live="polite"></div>
         <div class="preview-frame">
           <img id="preview" alt="Trophy preview" src="${safeBase}?username=octocat">
@@ -214,6 +218,7 @@ export function renderQueryBuilder(baseUrl: string): string {
       var form = document.getElementById("builder");
       var preview = document.getElementById("preview");
       var urlInput = document.getElementById("url");
+      var mdInput = document.getElementById("markdown");
       var status = document.getElementById("copy-status");
       var timer = null;
       var FAST_DEBOUNCE_MS = 250;
@@ -249,8 +254,24 @@ export function renderQueryBuilder(baseUrl: string): string {
 
       function update() {
         var url = build();
+        var username = form.querySelector("#username").value.trim() || "octocat";
         urlInput.value = url;
+        mdInput.value = "[![trophy](" + url + ")](https://github.com/" + username + ")";
         preview.src = url;
+      }
+
+      function flash(msg) {
+        status.textContent = msg;
+        setTimeout(function () { status.textContent = ""; }, 1500);
+      }
+
+      function copyFrom(input, okMsg) {
+        navigator.clipboard.writeText(input.value).then(function () {
+          flash(okMsg);
+        }).catch(function () {
+          input.select();
+          flash("Copy failed — text selected, press Ctrl+C");
+        });
       }
 
       function schedule(ev) {
@@ -265,12 +286,10 @@ export function renderQueryBuilder(baseUrl: string): string {
       form.addEventListener("change", schedule);
 
       document.getElementById("copy").addEventListener("click", function () {
-        navigator.clipboard.writeText(urlInput.value).then(function () {
-          status.textContent = "Copied!";
-          setTimeout(function () { status.textContent = ""; }, 1500);
-        }).catch(function () {
-          status.textContent = "Copy failed";
-        });
+        copyFrom(urlInput, "URL copied!");
+      });
+      document.getElementById("copy-md").addEventListener("click", function () {
+        copyFrom(mdInput, "Markdown copied!");
       });
     })();
   </script>

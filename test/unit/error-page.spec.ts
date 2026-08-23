@@ -35,6 +35,14 @@ describe("renderQueryBuilder", () => {
     expect(html).toContain('id="theme"');
   });
 
+  it("renders a markdown snippet wrapping the trophy in a link to the profile", () => {
+    const html = renderQueryBuilder("https://svc.example");
+    expect(html).toContain(
+      'value="[![trophy](https://svc.example?username=octocat)](https://github.com/octocat)"',
+    );
+    expect(html).toContain('id="copy-md"');
+  });
+
   it("escapes HTML-unsafe characters in the base URL", () => {
     const html = renderQueryBuilder('https://x.test/"><script>');
     expect(html).not.toContain('"><script>');
