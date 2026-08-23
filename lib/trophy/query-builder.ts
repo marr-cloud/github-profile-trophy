@@ -97,8 +97,8 @@ export function renderQueryBuilder(baseUrl: string): string {
   .toggles { display: flex; gap: 1.25rem; flex-wrap: wrap; }
   .toggles label { display: inline-flex; align-items: center; gap: 0.4rem; margin: 0; }
   .toggles input[type="checkbox"] { margin: 0; }
-  .checkgroup { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 0.25rem 0.75rem; max-height: 12rem; overflow-y: auto; padding: 0.5rem 0.75rem; border: 1px solid var(--pico-form-element-border-color); border-radius: var(--pico-border-radius); background: var(--pico-form-element-background-color); }
-  .checkgroup label { display: inline-flex; align-items: center; gap: 0.35rem; margin: 0; font-size: 0.9rem; font-weight: 400; }
+  .checkgroup { display: grid; grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)); gap: 0.25rem 0.5rem; max-height: 12rem; overflow-x: hidden; overflow-y: auto; padding: 0.5rem 0.75rem; border: 1px solid var(--pico-form-element-border-color); border-radius: var(--pico-border-radius); background: var(--pico-form-element-background-color); }
+  .checkgroup label { display: inline-flex; align-items: center; gap: 0.3rem; margin: 0; min-width: 0; font-size: 0.82rem; font-weight: 400; overflow-wrap: anywhere; }
   .checkgroup input[type="checkbox"] { margin: 0; }
   .hint { color: var(--pico-muted-color); font-size: 0.8rem; margin-top: 0.35rem; }
   .preview-frame { min-height: 260px; display: flex; align-items: center; justify-content: center; background: var(--pico-form-element-background-color); border: 1px dashed var(--pico-form-element-border-color); border-radius: var(--pico-border-radius); padding: 1rem; margin-bottom: 1rem; }
@@ -106,7 +106,7 @@ export function renderQueryBuilder(baseUrl: string): string {
   .url-row { display: grid; grid-template-columns: 1fr auto; gap: 0.5rem; margin-bottom: 0.25rem; }
   .url-row input { margin: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; }
   .url-row button { margin: 0; }
-  #copy-status { color: var(--pico-muted-color); font-size: 0.8rem; min-height: 1rem; }
+  #copy-status { color: var(--pico-muted-color); font-size: 0.8rem; min-height: 1rem; margin-bottom: 0.75rem; }
   form.panel select, form.panel input[type="text"], form.panel input[type="number"] { margin-bottom: 0; }
 </style>
 </head>
@@ -131,11 +131,12 @@ export function renderQueryBuilder(baseUrl: string): string {
           <legend>Layout</legend>
           <div class="grid2">
             <label>Columns
-              <input type="number" id="column" data-key="column" min="1" max="10" value="6">
+              <input type="number" id="column" data-key="column" min="-1" max="20" value="6">
             </label>
             <label>Rows
               <input type="number" id="row" data-key="row" min="1" max="10" value="3">
             </label>
+            <div class="hint" style="grid-column: 1 / -1;">Set <code>Columns</code> to <code>-1</code> to fit every trophy in a single adaptive row.</div>
             <label>Margin W
               <input type="number" id="margin-w" data-key="margin-w" min="0" max="40" value="0">
             </label>
@@ -163,14 +164,14 @@ export function renderQueryBuilder(baseUrl: string): string {
         </fieldset>
       </form>
       <section class="panel">
-        <div class="preview-frame">
-          <img id="preview" alt="Trophy preview" src="${safeBase}?username=octocat">
-        </div>
         <div class="url-row">
           <input id="url" readonly value="${safeBase}?username=octocat">
           <button type="button" id="copy">Copy URL</button>
         </div>
         <div id="copy-status" aria-live="polite"></div>
+        <div class="preview-frame">
+          <img id="preview" alt="Trophy preview" src="${safeBase}?username=octocat">
+        </div>
       </section>
     </div>
   </div>
@@ -183,6 +184,8 @@ export function renderQueryBuilder(baseUrl: string): string {
       var urlInput = document.getElementById("url");
       var status = document.getElementById("copy-status");
       var timer = null;
+      var FAST_DEBOUNCE_MS = 250;
+      var USERNAME_DEBOUNCE_MS = 700;
 
       function collect(name) {
         var boxes = form.querySelectorAll('input[name="' + name + '"]:checked');
@@ -218,9 +221,12 @@ export function renderQueryBuilder(baseUrl: string): string {
         preview.src = url;
       }
 
-      function schedule() {
+      function schedule(ev) {
         if (timer) clearTimeout(timer);
-        timer = setTimeout(update, 250);
+        var delay = (ev && ev.target && ev.target.id === "username")
+          ? USERNAME_DEBOUNCE_MS
+          : FAST_DEBOUNCE_MS;
+        timer = setTimeout(update, delay);
       }
 
       form.addEventListener("input", schedule);
