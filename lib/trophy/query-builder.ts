@@ -32,6 +32,24 @@ const DEFAULTS = {
 
 const PICO_CDN = "https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css";
 
+const OG_TITLE = "GitHub Profile Trophy";
+const OG_DESCRIPTION = "Add dynamically generated trophy cards to your GitHub README.";
+const OG_DOMAIN = "trophy.infraforge.cc";
+const OG_LOGO = "https://trophy.infraforge.cc/favicon.ico";
+
+/**
+ * Social preview image, generated at the edge by the external OG service
+ * (workerscando/og-image). Sunset theme + standard layout picked for the gold
+ * accent that matches the trophy motif. Swap the base host when we move to
+ * our own OG worker.
+ */
+const OG_IMAGE = "https://og.workerscando.com/api/og"
+  + "?title=" + encodeURIComponent(OG_TITLE)
+  + "&subtitle=" + encodeURIComponent(OG_DESCRIPTION)
+  + "&domain=" + encodeURIComponent(OG_DOMAIN)
+  + "&theme=sunset&layout=standard"
+  + "&logo=" + encodeURIComponent(OG_LOGO);
+
 function escapeHtml(s: string): string {
   return s
     .replace(/&/g, "&amp;")
@@ -80,6 +98,21 @@ export function renderQueryBuilder(baseUrl: string): string {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GitHub Profile Trophy — Query Builder</title>
 <meta name="description" content="Build and preview a GitHub Profile Trophy card">
+<link rel="canonical" href="${safeBase}">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="${escapeHtml(OG_TITLE)}">
+<meta property="og:title" content="${escapeHtml(OG_TITLE)} — Query Builder">
+<meta property="og:description" content="${escapeHtml(OG_DESCRIPTION)}">
+<meta property="og:url" content="${safeBase}">
+<meta property="og:image" content="${escapeHtml(OG_IMAGE)}">
+<meta property="og:image:type" content="image/svg+xml">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="${escapeHtml(OG_DESCRIPTION)}">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="${escapeHtml(OG_TITLE)} — Query Builder">
+<meta name="twitter:description" content="${escapeHtml(OG_DESCRIPTION)}">
+<meta name="twitter:image" content="${escapeHtml(OG_IMAGE)}">
 <link rel="stylesheet" href="${PICO_CDN}">
 <style>
   :root { --pico-form-element-spacing-vertical: 0.5rem; --pico-form-element-spacing-horizontal: 0.75rem; }
