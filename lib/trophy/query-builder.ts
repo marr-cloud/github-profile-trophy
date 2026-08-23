@@ -34,21 +34,15 @@ const PICO_CDN = "https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"
 
 const OG_TITLE = "GitHub Profile Trophy";
 const OG_DESCRIPTION = "Add dynamically generated trophy cards to your GitHub README.";
-const OG_DOMAIN = "trophy.infraforge.cc";
-const OG_LOGO = "https://trophy.infraforge.cc/favicon.ico";
 
 /**
- * Social preview image, generated at the edge by the external OG service
- * (workerscando/og-image). Sunset theme + standard layout picked for the gold
- * accent that matches the trophy motif. Swap the base host when we move to
- * our own OG worker.
+ * Social preview image, served as a static PNG from `public/og-preview.png`.
+ * Discord/Twitter/LinkedIn reject SVG for OG previews, so we ship a pre-
+ * rendered raster of the workerscando/og-image sunset+standard card. When
+ * we deploy our own OG worker with dynamic PNG output, swap this to its
+ * endpoint and delete public/og-preview.png.
  */
-const OG_IMAGE = "https://og.workerscando.com/api/og"
-  + "?title=" + encodeURIComponent(OG_TITLE)
-  + "&subtitle=" + encodeURIComponent(OG_DESCRIPTION)
-  + "&domain=" + encodeURIComponent(OG_DOMAIN)
-  + "&theme=sunset&layout=standard"
-  + "&logo=" + encodeURIComponent(OG_LOGO);
+const OG_IMAGE = "https://trophy.infraforge.cc/og-preview.png";
 
 function escapeHtml(s: string): string {
   return s
@@ -105,7 +99,7 @@ export function renderQueryBuilder(baseUrl: string): string {
 <meta property="og:description" content="${escapeHtml(OG_DESCRIPTION)}">
 <meta property="og:url" content="${safeBase}">
 <meta property="og:image" content="${escapeHtml(OG_IMAGE)}">
-<meta property="og:image:type" content="image/svg+xml">
+<meta property="og:image:type" content="image/png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="${escapeHtml(OG_DESCRIPTION)}">
