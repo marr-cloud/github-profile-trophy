@@ -70,12 +70,14 @@ function makeMemoryCache() {
 const CACHE_HEADER = "public, max-age=18800, s-maxage=28800, stale-while-revalidate=86400";
 
 describe("GET / (real production route)", () => {
-  it("missing username returns 400 HTML with cache header", async () => {
+  it("missing username returns 200 query-builder HTML with cache header", async () => {
     const r = await invoke(realRouteApp(), "/");
-    expect(r.status).toBe(400);
+    expect(r.status).toBe(200);
     expect(r.headers.get("content-type")).toBe("text/html; charset=utf-8");
     expect(r.headers.get("cache-control")).toBe(CACHE_HEADER);
-    expect(r.body).toContain('name="username"');
+    expect(r.body).toContain('id="builder"');
+    expect(r.body).toContain('id="preview"');
+    expect(r.body).toContain("octocat");
   });
 
   it("returns 502 HTML when no GitHub token is configured", async () => {

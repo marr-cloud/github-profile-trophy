@@ -7,8 +7,8 @@ export {
   Error404,
   Error419,
   Error502,
-  renderMissingUsernameForm,
 } from "~/lib/trophy/error-page.ts";
+export { renderQueryBuilder } from "~/lib/trophy/query-builder.ts";
 export {
   EServiceKindError,
   ServiceError,

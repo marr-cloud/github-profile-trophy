@@ -3,14 +3,13 @@ import {
   Card,
   COLORS,
   CONSTANTS,
-  Error400,
   Error404,
   Error419,
   Error502,
   EServiceKindError,
   fetchUserInfo,
   parseTrophyParams,
-  renderMissingUsernameForm,
+  renderQueryBuilder,
   ServiceError,
   type Theme,
   UserInfo,
@@ -62,7 +61,14 @@ export async function renderTrophyResponse(
 
   if (!params.username) {
     const baseUrl = `${url.origin}${url.pathname}`;
-    return errorResult(400, new Error400(renderMissingUsernameForm(baseUrl)).render());
+    return {
+      status: 200,
+      headers: {
+        "Cache-Control": CACHE_CONTROL_HEADER,
+        "Content-Type": "text/html; charset=utf-8",
+      },
+      body: renderQueryBuilder(baseUrl),
+    };
   }
 
   let userInfo = await deps.getCachedUser(params.username);

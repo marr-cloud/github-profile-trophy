@@ -134,38 +134,3 @@ export class Error502 extends BaseError {
   override readonly message = "Bad Gateway";
 }
 
-export function renderMissingUsernameForm(baseUrl: string): string {
-  return `<section>
-    <div>
-      <h2>"username" is a required query parameter</h2>
-      <p>The URL should look like
-      <div>
-        <p id="base-show">${baseUrl}?username=USERNAME</p>
-        <button>Copy Base Url</button>
-        <span id="temporary-span"></span>
-      </div>where
-      <code>USERNAME</code> is <em>your GitHub username.</em>
-    </div>
-    <div>
-      <h2>You can use this form: </h2>
-      <p>Enter your username and click "Get Trophies"</p>
-      <form action="${baseUrl}" method="get">
-        <label for="username">GitHub Username</label>
-        <input type="text" name="username" id="username" placeholder="Ex. gabriel-logan" required>
-        <label for="theme">Theme (Optional)</label>
-        <input type="text" name="theme" id="theme" placeholder="Ex. onedark" value="onedark">
-        <br>
-        <button type="submit">Get Trophies</button>
-      </form>
-    </div>
-    <script>
-      const button = document.querySelector("button");
-      const temporarySpan = document.querySelector("#temporary-span");
-      button.addEventListener("click", () => {
-        navigator.clipboard.writeText(document.querySelector("#base-show").textContent);
-        temporarySpan.textContent = "Copied!";
-        setTimeout(() => { temporarySpan.textContent = ""; }, 1500);
-      });
-    </script>
-  </section>`;
-}

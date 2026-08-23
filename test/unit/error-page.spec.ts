@@ -4,8 +4,8 @@ import {
   Error404,
   Error419,
   Error502,
-  renderMissingUsernameForm,
 } from "~/lib/trophy/error-page.ts";
+import { renderQueryBuilder } from "~/lib/trophy/query-builder.ts";
 
 describe("error pages", () => {
   it.each([
@@ -26,11 +26,18 @@ describe("error pages", () => {
   });
 });
 
-describe("renderMissingUsernameForm", () => {
-  it("interpolates the base URL into the recovery form", () => {
-    const html = renderMissingUsernameForm("https://svc.example");
-    expect(html).toContain("https://svc.example?username=USERNAME");
-    expect(html).toContain('name="username"');
-    expect(html).toContain('name="theme"');
+describe("renderQueryBuilder", () => {
+  it("embeds base URL in preview and copy fields with octocat fallback", () => {
+    const html = renderQueryBuilder("https://svc.example");
+    expect(html).toContain('src="https://svc.example?username=octocat"');
+    expect(html).toContain('value="https://svc.example?username=octocat"');
+    expect(html).toContain('id="builder"');
+    expect(html).toContain('id="theme"');
+  });
+
+  it("escapes HTML-unsafe characters in the base URL", () => {
+    const html = renderQueryBuilder('https://x.test/"><script>');
+    expect(html).not.toContain('"><script>');
+    expect(html).toContain("&quot;&gt;&lt;script&gt;");
   });
 });
