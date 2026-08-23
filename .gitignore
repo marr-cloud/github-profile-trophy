@@ -4,6 +4,7 @@ dist
 .nitro
 .cache
 .output
+coverage
 .env
 .env.local
 .vercel
