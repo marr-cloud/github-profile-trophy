@@ -18,7 +18,7 @@ const TITLE_OPTIONS = [
   "Repository",
 ] as const;
 
-const RANK_OPTIONS = ["S", "A", "B", "C"] as const;
+const RANK_OPTIONS = ["SECRET", "SSS", "SS", "S", "AAA", "AA", "A", "B", "C"] as const;
 
 const DEFAULTS = {
   theme: "default",
@@ -30,6 +30,8 @@ const DEFAULTS = {
   "no-frame": "false",
 } as const;
 
+const PICO_CDN = "https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css";
+
 function escapeHtml(s: string): string {
   return s
     .replace(/&/g, "&amp;")
@@ -39,10 +41,9 @@ function escapeHtml(s: string): string {
 }
 
 /**
- * JSON-encode a value for embedding inside an inline `<script>` tag. Also
+ * JSON-encode a value for embedding inside an inline `<script>` tag: also
  * escapes `<`, `>`, `&` so a payload cannot break out with `</script>` or
- * introduce a nested `<script>` (the standard hardening used by frameworks
- * that serialize state into HTML).
+ * introduce a nested `<script>`.
  */
 function jsonForScript(value: unknown): string {
   return JSON.stringify(value)
@@ -53,9 +54,9 @@ function jsonForScript(value: unknown): string {
 
 /**
  * Landing page for `GET /` when the caller has not supplied a username: a
- * self-contained HTML form that live-previews a trophy card. The preview
- * `<img>` points back at the same endpoint (defaulting to `octocat`), so the
- * server delivers the real SVG the visitor's URL will render.
+ * self-contained HTML form that live-previews a trophy card. Styled with
+ * Pico CSS (auto light/dark via `prefers-color-scheme`); the preview `<img>`
+ * points back at the same endpoint (defaulting to `octocat`).
  */
 export function renderQueryBuilder(baseUrl: string): string {
   const safeBase = escapeHtml(baseUrl);
@@ -79,178 +80,100 @@ export function renderQueryBuilder(baseUrl: string): string {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GitHub Profile Trophy — Query Builder</title>
 <meta name="description" content="Build and preview a GitHub Profile Trophy card">
+<link rel="stylesheet" href="${PICO_CDN}">
 <style>
-  :root {
-    --bg: #f6f8fa;
-    --panel: #fff;
-    --border: #d0d7de;
-    --text: #1f2328;
-    --muted: #656d76;
-    --accent: #0969da;
-    --accent-hover: #0550ae;
-    --code-bg: #eff1f3;
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    line-height: 1.5;
-  }
-  header {
-    padding: 24px 20px 8px;
-    text-align: center;
-  }
-  header h1 { margin: 0; font-size: 24px; }
-  header p { margin: 4px 0 0; color: var(--muted); font-size: 14px; }
-  main {
-    display: grid;
-    grid-template-columns: minmax(280px, 380px) 1fr;
-    gap: 20px;
-    max-width: 1100px;
-    margin: 16px auto;
-    padding: 0 20px 32px;
-  }
-  @media (max-width: 820px) {
-    main { grid-template-columns: 1fr; }
-  }
-  .panel {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 16px;
-  }
-  .field { margin-bottom: 12px; }
-  .field label.heading {
-    display: block;
-    font-weight: 600;
-    font-size: 13px;
-    margin-bottom: 4px;
-  }
-  input[type="text"], input[type="number"], select {
-    width: 100%;
-    padding: 6px 10px;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    font: inherit;
-    background: #fff;
-  }
-  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .toggles { display: flex; gap: 16px; }
-  .toggles label { display: flex; align-items: center; gap: 6px; font-size: 14px; }
-  .checkgroup {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: 4px 8px;
-    max-height: 168px;
-    overflow-y: auto;
-    padding: 8px;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    background: #fff;
-  }
-  .checkgroup label { font-size: 13px; display: flex; align-items: center; gap: 4px; }
-  .preview-wrap {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-  }
-  .preview-wrap img {
-    max-width: 100%;
-    height: auto;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    background: #fff;
-  }
-  .url-row {
-    display: flex;
-    gap: 8px;
-    width: 100%;
-  }
-  .url-row input {
-    flex: 1;
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 12px;
-    background: var(--code-bg);
-  }
-  button {
-    padding: 6px 14px;
-    border: 1px solid var(--border);
-    background: var(--accent);
-    color: #fff;
-    border-radius: 6px;
-    cursor: pointer;
-    font: inherit;
-  }
-  button:hover { background: var(--accent-hover); }
-  #copy-status {
-    color: var(--muted);
-    font-size: 12px;
-    min-height: 16px;
-  }
-  .hint { color: var(--muted); font-size: 12px; margin-top: 4px; }
+  :root { --pico-form-element-spacing-vertical: 0.5rem; --pico-form-element-spacing-horizontal: 0.75rem; }
+  .wrap { max-width: 1400px; margin: 0 auto; padding: 1.5rem 1.25rem 3rem; }
+  header.hero { text-align: center; margin-bottom: 1.5rem; }
+  header.hero h1 { margin: 0; font-size: 1.75rem; }
+  header.hero p { margin: 0.25rem 0 0; color: var(--pico-muted-color); }
+  .layout { display: grid; grid-template-columns: minmax(320px, 380px) 1fr; gap: 1.5rem; align-items: start; }
+  @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+  form.panel, section.panel { background: var(--pico-card-background-color); border: 1px solid var(--pico-card-border-color); border-radius: var(--pico-border-radius); padding: 1.25rem; }
+  form.panel fieldset { margin: 0 0 1rem; padding: 0; border: 0; }
+  form.panel fieldset:last-child { margin-bottom: 0; }
+  form.panel legend { font-weight: 600; font-size: 0.875rem; padding: 0; margin-bottom: 0.5rem; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+  .toggles { display: flex; gap: 1.25rem; flex-wrap: wrap; }
+  .toggles label { display: inline-flex; align-items: center; gap: 0.4rem; margin: 0; }
+  .toggles input[type="checkbox"] { margin: 0; }
+  .checkgroup { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 0.25rem 0.75rem; max-height: 12rem; overflow-y: auto; padding: 0.5rem 0.75rem; border: 1px solid var(--pico-form-element-border-color); border-radius: var(--pico-border-radius); background: var(--pico-form-element-background-color); }
+  .checkgroup label { display: inline-flex; align-items: center; gap: 0.35rem; margin: 0; font-size: 0.9rem; font-weight: 400; }
+  .checkgroup input[type="checkbox"] { margin: 0; }
+  .hint { color: var(--pico-muted-color); font-size: 0.8rem; margin-top: 0.35rem; }
+  .preview-frame { min-height: 260px; display: flex; align-items: center; justify-content: center; background: var(--pico-form-element-background-color); border: 1px dashed var(--pico-form-element-border-color); border-radius: var(--pico-border-radius); padding: 1rem; margin-bottom: 1rem; }
+  .preview-frame img { max-width: 100%; height: auto; display: block; }
+  .url-row { display: grid; grid-template-columns: 1fr auto; gap: 0.5rem; margin-bottom: 0.25rem; }
+  .url-row input { margin: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; }
+  .url-row button { margin: 0; }
+  #copy-status { color: var(--pico-muted-color); font-size: 0.8rem; min-height: 1rem; }
+  form.panel select, form.panel input[type="text"], form.panel input[type="number"] { margin-bottom: 0; }
 </style>
 </head>
 <body>
-  <header>
-    <h1>GitHub Profile Trophy</h1>
-    <p>Customize your trophy card and copy the URL for your README.</p>
-  </header>
-  <main>
-    <form class="panel" id="builder" autocomplete="off">
-      <div class="field">
-        <label class="heading" for="username">GitHub username</label>
-        <input type="text" id="username" data-key="username" placeholder="octocat">
-        <div class="hint">Preview uses <code>octocat</code> if empty.</div>
-      </div>
-      <div class="field">
-        <label class="heading" for="theme">Theme</label>
-        <select id="theme" data-key="theme">${themeOptions}</select>
-      </div>
-      <div class="field grid2">
-        <div>
-          <label class="heading" for="column">Columns</label>
-          <input type="number" id="column" data-key="column" min="1" max="10" value="6">
+  <div class="wrap">
+    <header class="hero">
+      <h1>GitHub Profile Trophy</h1>
+      <p>Build a trophy card and copy the URL for your README.</p>
+    </header>
+    <div class="layout">
+      <form class="panel" id="builder" autocomplete="off">
+        <fieldset>
+          <legend><label for="username">GitHub username</label></legend>
+          <input type="text" id="username" data-key="username" placeholder="octocat">
+          <div class="hint">Preview uses <code>octocat</code> if empty.</div>
+        </fieldset>
+        <fieldset>
+          <legend><label for="theme">Theme</label></legend>
+          <select id="theme" data-key="theme">${themeOptions}</select>
+        </fieldset>
+        <fieldset>
+          <legend>Layout</legend>
+          <div class="grid2">
+            <label>Columns
+              <input type="number" id="column" data-key="column" min="1" max="10" value="6">
+            </label>
+            <label>Rows
+              <input type="number" id="row" data-key="row" min="1" max="10" value="3">
+            </label>
+            <label>Margin W
+              <input type="number" id="margin-w" data-key="margin-w" min="0" max="40" value="0">
+            </label>
+            <label>Margin H
+              <input type="number" id="margin-h" data-key="margin-h" min="0" max="40" value="0">
+            </label>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Style</legend>
+          <div class="toggles">
+            <label><input type="checkbox" id="no-bg" data-key="no-bg"> no-bg</label>
+            <label><input type="checkbox" id="no-frame" data-key="no-frame"> no-frame</label>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Include titles</legend>
+          <div class="checkgroup">${titleBoxes}</div>
+          <div class="hint">All trophies shown when none are checked.</div>
+        </fieldset>
+        <fieldset>
+          <legend>Include ranks</legend>
+          <div class="checkgroup">${rankBoxes}</div>
+          <div class="hint">Exact match: <code>S</code> does not include <code>SS</code>/<code>SSS</code>. Pick each tier you want to keep.</div>
+        </fieldset>
+      </form>
+      <section class="panel">
+        <div class="preview-frame">
+          <img id="preview" alt="Trophy preview" src="${safeBase}?username=octocat">
         </div>
-        <div>
-          <label class="heading" for="row">Rows</label>
-          <input type="number" id="row" data-key="row" min="1" max="10" value="3">
+        <div class="url-row">
+          <input id="url" readonly value="${safeBase}?username=octocat">
+          <button type="button" id="copy">Copy URL</button>
         </div>
-      </div>
-      <div class="field grid2">
-        <div>
-          <label class="heading" for="margin-w">Margin W</label>
-          <input type="number" id="margin-w" data-key="margin-w" min="0" max="40" value="0">
-        </div>
-        <div>
-          <label class="heading" for="margin-h">Margin H</label>
-          <input type="number" id="margin-h" data-key="margin-h" min="0" max="40" value="0">
-        </div>
-      </div>
-      <div class="field toggles">
-        <label><input type="checkbox" id="no-bg" data-key="no-bg"> no-bg</label>
-        <label><input type="checkbox" id="no-frame" data-key="no-frame"> no-frame</label>
-      </div>
-      <div class="field">
-        <label class="heading">Include titles (all if none checked)</label>
-        <div class="checkgroup">${titleBoxes}</div>
-      </div>
-      <div class="field">
-        <label class="heading">Include ranks (all if none checked)</label>
-        <div class="checkgroup">${rankBoxes}</div>
-      </div>
-    </form>
-    <section class="panel preview-wrap">
-      <img id="preview" alt="Trophy preview" src="${safeBase}?username=octocat">
-      <div class="url-row">
-        <input id="url" readonly value="${safeBase}?username=octocat">
-        <button type="button" id="copy">Copy</button>
-      </div>
-      <div id="copy-status"></div>
-    </section>
-  </main>
+        <div id="copy-status" aria-live="polite"></div>
+      </section>
+    </div>
+  </div>
   <script>
     (function () {
       var base = ${jsonForScript(baseUrl)};
@@ -260,6 +183,13 @@ export function renderQueryBuilder(baseUrl: string): string {
       var urlInput = document.getElementById("url");
       var status = document.getElementById("copy-status");
       var timer = null;
+
+      function collect(name) {
+        var boxes = form.querySelectorAll('input[name="' + name + '"]:checked');
+        var values = [];
+        boxes.forEach(function (b) { values.push(b.value); });
+        return values.join(",");
+      }
 
       function build() {
         var params = new URLSearchParams();
@@ -280,13 +210,6 @@ export function renderQueryBuilder(baseUrl: string): string {
         var ranks = collect("rank");
         if (ranks) params.set("rank", ranks);
         return base + "?" + params.toString();
-      }
-
-      function collect(name) {
-        var boxes = form.querySelectorAll('input[name="' + name + '"]:checked');
-        var values = [];
-        boxes.forEach(function (b) { values.push(b.value); });
-        return values.join(",");
       }
 
       function update() {
