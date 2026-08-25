@@ -1,8 +1,6 @@
 import {
   defineEventHandler,
   getRequestURL,
-  setResponseHeader,
-  setResponseStatus,
 } from "nitro/h3";
 import { useRuntimeConfig } from "nitro/runtime-config";
 import { CONSTANTS } from "~/lib/trophy/index.ts";
@@ -23,9 +21,9 @@ export default defineEventHandler(async (event) => {
   });
 
   for (const [name, value] of Object.entries(result.headers)) {
-    setResponseHeader(event, name, value);
+    event.res.headers.set(name, value);
   }
-  setResponseStatus(event, result.status);
+  event.res.status = result.status;
 
   return result.body;
 });
