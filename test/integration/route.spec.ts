@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { useRuntimeConfig } from "nitro/runtime-config";
 import { http, HttpResponse } from "msw";
 import { mswServer } from "~/test/setup.ts";
@@ -10,6 +10,7 @@ import { renderTrophyResponse, type RenderDeps } from "~/server/utils/render.ts"
 import type { HTTPEvent } from "nitro/h3";
 import { createUserResolver } from "~/server/utils/github-user.ts";
 import { CSP, type ContentKind } from "~/lib/trophy/security-headers.ts";
+import { UserInfo } from "~/lib/trophy/index.ts";
 import faviconHandler from "~/server/routes/favicon.ico.get.ts";
 
 const ENDPOINT = "https://api.github.com/graphql";
@@ -200,6 +201,20 @@ describe("GET / (pure core, injected dependencies)", () => {
     expect(r.status).toBe(502);
     expect(r.headers.get("content-type")).toBe("text/html; charset=utf-8");
     expect(r.headers.get("cache-control")).toBe("no-store");
+  });
+
+  it("unexpected resolver failure (e.g. cache timeout) maps to 502 no-store", async () => {
+    mswServer.use(http.post(ENDPOINT, () => HttpResponse.json({ data: { user: fixture } })));
+    vi.spyOn(UserInfo, "fromJSON").mockImplementation(() => {
+      throw new Error("timeout");
+    });
+    try {
+      const r = await invoke(testRouteApp(makeDeps()), "/?username=other");
+      expect(r.status).toBe(502);
+      expect(r.headers.get("cache-control")).toBe("no-store");
+    } finally {
+      vi.restoreAllMocks();
+    }
   });
 });
 

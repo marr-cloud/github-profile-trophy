@@ -17,7 +17,13 @@ export function lazyDriver(name: string, options: unknown, build: () => Promise<
     getInstance: async () => (await get()).getInstance?.(),
     hasItem: async (k: string, o: any) => (await get()).hasItem(k, o),
     getItem: async (k: string, o: any) => (await get()).getItem(k, o),
-    setItem: async (k: string, v: string, o: any) => (await get()).setItem?.(k, v, o),
+    // ocache evicts with set(key, null); unstorage serializes that to "null" with
+    // no TTL, i.e. a permanent junk key plus a billable write. Real entries are
+    // always JSON objects, so drop tombstones.
+    setItem: async (k: string, v: string | null, o: any) => {
+      if (v === null || v === "null") return;
+      return (await get()).setItem?.(k, v, o);
+    },
     removeItem: async (k: string, o: any) => (await get()).removeItem?.(k, o),
     getKeys: async (b: string, o: any) => (await get()).getKeys(b, o),
     clear: async (b: string, o: any) => (await get()).clear?.(b, o),

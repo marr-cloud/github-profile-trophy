@@ -89,6 +89,18 @@ describe("createUserResolver", () => {
     expect(c.n).toBe(2);
   });
 
+  it("maps non-ServiceError rejections (e.g. timeouts) to a 502 ServiceError", async () => {
+    mswServer.use(http.post(ENDPOINT, ok));
+    vi.spyOn(UserInfo, "fromJSON").mockImplementation(() => {
+      throw new Error("boom");
+    });
+    const resolve = createUserResolver({ tokens: ["t"], endpoint: ENDPOINT, storage: memoryStorage() });
+    const r = await resolve(ev, "someone");
+    expect(r).toBeInstanceOf(ServiceError);
+    expect((r as ServiceError).code).toBe(502);
+    expect((r as ServiceError).message).toBe("boom");
+  });
+
   it("a 404 miss makes no storage set/remove calls", async () => {
     mswServer.use(countingHandler(() => HttpResponse.json({ data: { user: null } }), { n: 0 }));
     const storage = memoryStorage();

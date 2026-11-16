@@ -76,7 +76,11 @@ export function createUserResolver(deps: UserResolverDeps): ResolveUser {
       return UserInfo.fromJSON(JSON.stringify(value));
     } catch (error) {
       if (error instanceof ServiceError) return error;
-      throw error;
+      // ocache TimeoutError, storage or network failures: surface as 502, not a generic 500.
+      return new ServiceError(
+        error instanceof Error ? error.message : "Unexpected error",
+        EServiceKindError.BAD_GATEWAY,
+      );
     }
   };
 }

@@ -115,3 +115,23 @@ describe("upstash-env", () => {
     await expect(s.getItem("a")).rejects.toThrow(/UPSTASH_REDIS_REST_TOKEN/);
   });
 });
+
+describe("tombstone writes", () => {
+  it.each([null, "null"])("setItem(k, %j) is a no-op and keeps the existing value (KV)", async (v) => {
+    const kv = fakeKV();
+    const s = createStorage({ driver: cloudflareKVFallback({ binding: "B", getBinding: () => kv }) });
+    await s.setItem("k", { x: 1 });
+    kv.put.mockClear();
+    await s.setItem("k", v as never);
+    expect(kv.put).not.toHaveBeenCalled();
+    expect(kv.delete).not.toHaveBeenCalled();
+    expect(await s.getItem("k")).toEqual({ x: 1 });
+  });
+  it("setItem(k, null) is a no-op on the memory fallback", async () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    const s = createStorage({ driver: cloudflareKVFallback({ binding: "B", getBinding: () => undefined }) });
+    await s.setItem("k", { x: 1 });
+    await s.setItem("k", null as never);
+    expect(await s.getItem("k")).toEqual({ x: 1 });
+  });
+});
