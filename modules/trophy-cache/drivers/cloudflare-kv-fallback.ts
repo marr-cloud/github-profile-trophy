@@ -21,7 +21,8 @@ function importEnv() {
 export default function cloudflareKVFallback(opts: CloudflareKVFallbackOptions): Driver {
   return lazyDriver("cloudflare-kv-fallback", { binding: opts.binding }, async () => {
     const found = opts.getBinding ? opts.getBinding(opts.binding) : (await importEnv())?.[opts.binding];
-    if (found) {
+    const f = found as Record<string, unknown> | undefined;
+    if (f && !["get", "put", "delete"].some((k) => typeof f[k] !== "function")) {
       return (cloudflareKVBinding as any)({ binding: found }) as Driver;
     }
     console.warn(
