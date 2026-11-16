@@ -15,6 +15,13 @@ if (trophyDriver === "cloudflare-kv-binding") {
 export default defineConfig({
   compatibilityDate: "2026-08-15",
   serverDir: "./server",
+  publicAssets: [
+    {
+      dir: "node_modules/@anyblades/pico/css",
+      baseURL: "/assets",
+      ignore: ["**/blades*", "**/pico.css", "**/pico.conditional*", "**/postcss.config.js"],
+    },
+  ],
   kv: {
     "cache:trophy": trophyStorage as unknown as never,
   },
