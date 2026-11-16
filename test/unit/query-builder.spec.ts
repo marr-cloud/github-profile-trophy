@@ -76,8 +76,8 @@ describe("renderQueryBuilder", () => {
 
   it("keeps chip glyph escapes ASCII-safe in builder.css", () => {
     const css = readFileSync("public/builder.css", "utf8");
-    expect(css).toMatch(/\[data-state="include"\]::before \{ content: "\2713/);
-    expect(css).toMatch(/\[data-state="exclude"\]::before \{ content: "\2715/);
+    expect(css).toMatch(/\[data-state="include"\]::before \{ content: "\\2713/);
+    expect(css).toMatch(/\[data-state="exclude"\]::before \{ content: "\\2715/);
     expect(css).not.toMatch(/[^\x00-\x7F]/);
   });
 });
