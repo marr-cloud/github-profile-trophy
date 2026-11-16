@@ -17,9 +17,9 @@ form.panel legend { font-weight: 600; font-size: 0.875rem; padding: 0; margin-bo
 .chip { display: inline-flex; align-items: center; gap: 0.3rem; margin: 0; width: auto; padding: 0.28rem 0.7rem; border: 1px solid var(--pico-form-element-border-color); border-radius: 999px; font-size: 0.82rem; line-height: 1.2; font-weight: 400; color: var(--pico-color); background: var(--pico-background-color); cursor: pointer; user-select: none; transition: background-color 0.12s, color 0.12s, border-color 0.12s; }
 .chip:hover { border-color: var(--pico-primary); }
 .chip[data-state="include"] { background: var(--pico-primary); color: var(--pico-primary-inverse); border-color: var(--pico-primary); }
-.chip[data-state="include"]::before { content: "¹3"; }
+.chip[data-state="include"]::before { content: "\2713 "; }
 .chip[data-state="exclude"] { color: var(--pico-del-color); border-color: var(--pico-del-color); text-decoration: line-through; }
-.chip[data-state="exclude"]::before { content: "¹5"; display: inline-block; text-decoration: none; }
+.chip[data-state="exclude"]::before { content: "\2715 "; display: inline-block; text-decoration: none; }
 .chip:focus-visible { outline: 2px solid var(--pico-primary-focus); outline-offset: 2px; }
 .hint { color: var(--pico-muted-color); font-size: 0.8rem; margin-top: 0.35rem; }
 .preview-frame { min-height: 260px; display: flex; align-items: center; justify-content: center; background: var(--pico-form-element-background-color); border: 1px dashed var(--pico-form-element-border-color); border-radius: var(--pico-border-radius); padding: 1rem; margin-bottom: 1rem; }
