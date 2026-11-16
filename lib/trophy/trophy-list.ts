@@ -19,6 +19,22 @@ import {
 import { UserInfo } from "~/lib/trophy/user-info.ts";
 import { RANK, RANK_ORDER } from "~/lib/trophy/utils.ts";
 
+export function splitFilterValues(
+  values: Array<string>,
+): { include: Array<string>; exclude: Array<string> } {
+  const include: Array<string> = [];
+  const exclude: Array<string> = [];
+  for (const value of values) {
+    if (value.startsWith("-")) {
+      const rest = value.substring(1);
+      if (rest !== "") exclude.push(rest);
+    } else if (value !== "") {
+      include.push(value);
+    }
+  }
+  return { include, exclude };
+}
+
 export class TrophyList {
   private trophies = new Array<Trophy>();
   constructor(userInfo: UserInfo) {
@@ -60,31 +76,22 @@ export class TrophyList {
       !trophy.hidden || trophy.rank !== RANK.UNKNOWN
     );
   }
-  filterByTitles(titles: Array<string>) {
+  filterByTitles(values: Array<string>) {
+    const { include, exclude } = splitFilterValues(values);
     this.trophies = this.trophies.filter((trophy) => {
-      return trophy.filterTitles.some((title) => titles.includes(title));
+      const names = trophy.filterTitles;
+      if (include.length > 0 && !names.some((n) => include.includes(n))) {
+        return false;
+      }
+      return !names.some((n) => exclude.includes(n));
     });
   }
-  filterByRanks(ranks: Array<string>) {
-    if (ranks.filter((rank) => rank.includes("-")).length !== 0) {
-      this.trophies = this.trophies.filter((trophy) =>
-        !ranks.map((rank) => rank.substring(1)).includes(trophy.rank)
-      );
-      return;
-    }
-    this.trophies = this.trophies.filter((trophy) =>
-      ranks.includes(trophy.rank)
-    );
-  }
-  filterByExclusionTitles(titles: Array<string>) {
-    const excludeTitles = titles.filter((title) => title.startsWith("-")).map(
-      (title) => title.substring(1),
-    );
-    if (excludeTitles.length > 0) {
-      this.trophies = this.trophies.filter((trophy) =>
-        !excludeTitles.includes(trophy.title)
-      );
-    }
+  filterByRanks(values: Array<string>) {
+    const { include, exclude } = splitFilterValues(values);
+    this.trophies = this.trophies.filter((trophy) => {
+      if (include.length > 0 && !include.includes(trophy.rank)) return false;
+      return !exclude.includes(trophy.rank);
+    });
   }
   sortByRank() {
     this.trophies = this.trophies.toSorted((a: Trophy, b: Trophy) =>
