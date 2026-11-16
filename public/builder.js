@@ -10,11 +10,24 @@
   var FAST_DEBOUNCE_MS = 250;
   var USERNAME_DEBOUNCE_MS = 700;
 
-  function collect(name) {
-    var boxes = form.querySelectorAll('input[name="' + name + '"]:checked');
+  var STATES = ["neutral", "include", "exclude"];
+  var PRESSED = { neutral: "false", include: "true", exclude: "mixed" };
+  var LABELS = { neutral: "any", include: "included", exclude: "excluded" };
+
+  function collect(group) {
     var values = [];
-    boxes.forEach(function (b) { values.push(b.value); });
+    form.querySelectorAll('button.chip[data-group="' + group + '"]').forEach(function (c) {
+      if (c.dataset.state === "include") values.push(c.dataset.value);
+      else if (c.dataset.state === "exclude") values.push("-" + c.dataset.value);
+    });
     return values.join(",");
+  }
+
+  function cycle(chip) {
+    var next = STATES[(STATES.indexOf(chip.dataset.state) + 1) % STATES.length];
+    chip.dataset.state = next;
+    chip.setAttribute("aria-pressed", PRESSED[next]);
+    chip.setAttribute("aria-label", chip.dataset.value + ": " + LABELS[next]);
   }
 
   function build() {
@@ -52,12 +65,21 @@
   }
 
   function copyFrom(input, okMsg) {
-    navigator.clipboard.writeText(input.value).then(function () {
-      flash(okMsg);
-    }).catch(function () {
+    function fail() {
       input.select();
       flash("Copy failed — text selected, press Ctrl+C");
-    });
+    }
+    if (!navigator.clipboard || typeof navigator.clipboard.writeText !== "function") {
+      fail();
+      return;
+    }
+    try {
+      navigator.clipboard.writeText(input.value).then(function () {
+        flash(okMsg);
+      }, fail);
+    } catch (e) {
+      fail();
+    }
   }
 
   function schedule(ev) {
@@ -68,6 +90,12 @@
     timer = setTimeout(update, delay);
   }
 
+  form.addEventListener("click", function (e) {
+    var chip = e.target.closest && e.target.closest("button.chip");
+    if (!chip) return;
+    cycle(chip);
+    schedule(e);
+  });
   form.addEventListener("input", schedule);
   form.addEventListener("change", schedule);
   form.addEventListener("submit", function (e) { e.preventDefault(); });

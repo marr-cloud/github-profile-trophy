@@ -48,4 +48,28 @@ describe("renderQueryBuilder", () => {
       "no-frame": "false",
     });
   });
+  it("renders tri-state chips for titles and ranks", () => {
+    expect(html.match(/data-group="title"/g)).toHaveLength(15);
+    expect(html.match(/data-group="rank"/g)).toHaveLength(9);
+    expect(html.match(/data-state="neutral" aria-pressed="false"/g)).toHaveLength(24);
+    expect(html).not.toContain('<input type="checkbox" name="rank"');
+    expect(html).not.toContain('<input type="checkbox" name="title"');
+  });
+
+  it("renders the footer links", () => {
+    const footer = html.match(/<footer class="site-footer">[\s\S]*<\/footer>/)?.[0] ?? "";
+    for (
+      const href of [
+        "https://github.com/marr-cloud/github-profile-trophy",
+        "https://github.com/ryo-ma/github-profile-trophy",
+        "https://github.com/marr-cloud/github-profile-trophy#usage",
+        "https://github.com/marr-cloud/github-profile-trophy/issues/new",
+        "https://github.com/ryo-ma/github-profile-trophy/blob/master/LICENSE",
+      ]
+    ) {
+      expect(footer).toMatch(
+        new RegExp(`<a href="${href}" target="_blank" rel="noopener noreferrer">`),
+      );
+    }
+  });
 });

@@ -14,13 +14,13 @@ form.panel legend { font-weight: 600; font-size: 0.875rem; padding: 0; margin-bo
 .toggles label { display: inline-flex; align-items: center; gap: 0.4rem; margin: 0; }
 .toggles input[type="checkbox"] { margin: 0; }
 .checkgroup { display: flex; flex-wrap: wrap; gap: 0.4rem; max-height: 12rem; overflow-x: hidden; overflow-y: auto; padding: 0.6rem 0.7rem; border: 1px solid var(--pico-form-element-border-color); border-radius: var(--pico-border-radius); background: var(--pico-form-element-background-color); }
-.chip { display: inline-block; margin: 0; cursor: pointer; }
-.chip input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
-.chip span { display: inline-block; padding: 0.28rem 0.7rem; border: 1px solid var(--pico-form-element-border-color); border-radius: 999px; font-size: 0.82rem; line-height: 1.2; color: var(--pico-color); background: var(--pico-background-color); transition: background-color 0.12s, color 0.12s, border-color 0.12s; user-select: none; }
-.chip:hover span { border-color: var(--pico-primary); }
-.chip input:checked + span { background: var(--pico-primary); color: var(--pico-primary-inverse); border-color: var(--pico-primary); }
-.chip input:focus-visible + span { outline: 2px solid var(--pico-primary-focus); outline-offset: 2px; }
-.checkgroup input[type="checkbox"] { margin: 0; }
+.chip { display: inline-flex; align-items: center; gap: 0.3rem; margin: 0; width: auto; padding: 0.28rem 0.7rem; border: 1px solid var(--pico-form-element-border-color); border-radius: 999px; font-size: 0.82rem; line-height: 1.2; font-weight: 400; color: var(--pico-color); background: var(--pico-background-color); cursor: pointer; user-select: none; transition: background-color 0.12s, color 0.12s, border-color 0.12s; }
+.chip:hover { border-color: var(--pico-primary); }
+.chip[data-state="include"] { background: var(--pico-primary); color: var(--pico-primary-inverse); border-color: var(--pico-primary); }
+.chip[data-state="include"]::before { content: "¹3"; }
+.chip[data-state="exclude"] { color: var(--pico-del-color); border-color: var(--pico-del-color); text-decoration: line-through; }
+.chip[data-state="exclude"]::before { content: "¹5"; display: inline-block; text-decoration: none; }
+.chip:focus-visible { outline: 2px solid var(--pico-primary-focus); outline-offset: 2px; }
 .hint { color: var(--pico-muted-color); font-size: 0.8rem; margin-top: 0.35rem; }
 .preview-frame { min-height: 260px; display: flex; align-items: center; justify-content: center; background: var(--pico-form-element-background-color); border: 1px dashed var(--pico-form-element-border-color); border-radius: var(--pico-border-radius); padding: 1rem; margin-bottom: 1rem; }
 .preview-frame img { max-width: 100%; height: auto; display: block; }
@@ -30,3 +30,5 @@ form.panel legend { font-weight: 600; font-size: 0.875rem; padding: 0; margin-bo
 #copy-status { color: var(--pico-muted-color); font-size: 0.8rem; min-height: 1rem; margin-bottom: 0.75rem; }
 form.panel select, form.panel input[type="text"], form.panel input[type="number"] { margin-bottom: 0; }
 .span-all { grid-column: 1 / -1; }
+.site-footer { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem 1.25rem; margin-top: 2rem; font-size: 0.8rem; color: var(--pico-muted-color); }
+.site-footer a { color: var(--pico-muted-color); }

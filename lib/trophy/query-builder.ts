@@ -30,6 +30,8 @@ const DEFAULTS = {
   "no-frame": "false",
 } as const;
 
+const CHIP_HINT = "Click: include ✓ · again: exclude ✕ · again: clear. Exclusions win.";
+
 const OG_TITLE = "GitHub Profile Trophy";
 const OG_DESCRIPTION = "Add dynamically generated trophy cards to your GitHub README.";
 
@@ -50,6 +52,18 @@ function escapeHtml(s: string): string {
     .replace(/"/g, "&quot;");
 }
 
+function chip(group: "title" | "rank", value: string): string {
+  return `<button type="button" class="chip" data-group="${group}" data-value="${value}" data-state="neutral" aria-pressed="false" aria-label="${value}: any">${value}</button>`;
+}
+
+const FOOTER_LINKS = [
+  ["Source code", "https://github.com/marr-cloud/github-profile-trophy"],
+  ["Original project", "https://github.com/ryo-ma/github-profile-trophy"],
+  ["Parameters", "https://github.com/marr-cloud/github-profile-trophy#usage"],
+  ["Report an issue", "https://github.com/marr-cloud/github-profile-trophy/issues/new"],
+  ["License (MIT)", "https://github.com/ryo-ma/github-profile-trophy/blob/master/LICENSE"],
+] as const;
+
 /**
  * Landing page for `GET /` when the caller has not supplied a username: a
  * self-contained HTML form that live-previews a trophy card. Styled with
@@ -63,14 +77,14 @@ export function renderQueryBuilder(baseUrl: string): string {
     .map((n) => `<option value="${n}"${n === "default" ? " selected" : ""}>${n}</option>`)
     .join("");
   const titleBoxes = TITLE_OPTIONS
-    .map((t) =>
-      `<label class="chip"><input type="checkbox" name="title" value="${t}"><span>${t}</span></label>`
-    )
+    .map((t) => chip("title", t))
     .join("");
   const rankBoxes = RANK_OPTIONS
-    .map((r) =>
-      `<label class="chip"><input type="checkbox" name="rank" value="${r}"><span>${r}</span></label>`
-    )
+    .map((r) => chip("rank", r))
+    .join("");
+
+  const footerLinks = FOOTER_LINKS
+    .map(([label, href]) => `<a href="${href}" target="_blank" rel="noopener noreferrer">${label}</a>`)
     .join("");
 
   return `<!DOCTYPE html>
@@ -140,14 +154,14 @@ export function renderQueryBuilder(baseUrl: string): string {
           </div>
         </fieldset>
         <fieldset>
-          <legend>Include titles</legend>
+          <legend>Titles</legend>
           <div class="checkgroup">${titleBoxes}</div>
-          <div class="hint">All trophies shown when none are checked.</div>
+          <div class="hint">${CHIP_HINT}</div>
         </fieldset>
         <fieldset>
-          <legend>Include ranks</legend>
+          <legend>Ranks</legend>
           <div class="checkgroup">${rankBoxes}</div>
-          <div class="hint">Exact match: <code>S</code> does not include <code>SS</code>/<code>SSS</code>. Pick each tier you want to keep.</div>
+          <div class="hint">${CHIP_HINT} Exact match: <code>S</code> does not include <code>SS</code>/<code>SSS</code>.</div>
         </fieldset>
       </form>
       <section class="panel">
@@ -165,6 +179,7 @@ export function renderQueryBuilder(baseUrl: string): string {
         </div>
       </section>
     </div>
+    <footer class="site-footer">${footerLinks}</footer>
   </div>
   <script src="/builder.js" defer></script>
 </body>
