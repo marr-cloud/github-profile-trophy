@@ -29,13 +29,7 @@ export class Card {
     trophyList.filterByHidden();
 
     if (this.titles.length != 0) {
-      const includeTitles = this.titles.filter((title) =>
-        !title.startsWith("-")
-      );
-      if (includeTitles.length > 0) {
-        trophyList.filterByTitles(includeTitles);
-      }
-      trophyList.filterByExclusionTitles(this.titles);
+      trophyList.filterByTitles(this.titles);
     }
 
     if (this.ranks.length != 0) {
@@ -46,7 +40,7 @@ export class Card {
 
     if (this.maxColumn == -1) {
       this.maxColumn = trophyList.length;
-      this.width = this.panelSize * this.maxColumn +
+      this.width = this.maxColumn === 0 ? 0 : this.panelSize * this.maxColumn +
         this.marginWidth * (this.maxColumn - 1);
     }
 
@@ -65,14 +59,13 @@ export class Card {
     </svg>`;
   }
   private getRow(trophyList: TrophyList) {
-    let row = Math.floor((trophyList.length - 1) / this.maxColumn) + 1;
-    if (row > this.maxRow) {
-      row = this.maxRow;
-    }
-    return row;
+    if (trophyList.length === 0 || this.maxColumn <= 0) return 0;
+    const row = Math.floor((trophyList.length - 1) / this.maxColumn) + 1;
+    return Math.max(0, Math.min(row, this.maxRow));
   }
   private getHeight(row: number) {
     // Calculate the height of the card from turns
+    if (row === 0) return 0;
     return this.panelSize * row + this.marginHeight * (row - 1);
   }
 

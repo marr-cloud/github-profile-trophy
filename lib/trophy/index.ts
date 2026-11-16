@@ -17,3 +17,9 @@ export {
   type FetchUserInfoOptions,
 } from "~/lib/trophy/github.ts";
 export { parseTrophyParams, type TrophyParams } from "~/lib/trophy/params.ts";
+export {
+  BASE_SECURITY_HEADERS,
+  CSP,
+  securityHeaders,
+  type ContentKind,
+} from "~/lib/trophy/security-headers.ts";

@@ -1,4 +1,5 @@
 import { defineConfig } from "nitro";
+import { BASE_SECURITY_HEADERS } from "./lib/trophy/security-headers.ts";
 
 const trophyDriver = process.env.NITRO_STORAGE_TROPHY_DRIVER ?? "memory";
 const trophyStorage: Record<string, unknown> = { driver: trophyDriver };
@@ -15,7 +16,20 @@ if (trophyDriver === "cloudflare-kv-binding") {
 export default defineConfig({
   compatibilityDate: "2026-08-15",
   serverDir: "./server",
-  storage: {
+  publicAssets: [
+    {
+      dir: "node_modules/@anyblades/pico/css",
+      // Not "/assets": Nitro marks that dir immutable for 1 year (Vite assetsDir).
+      baseURL: "/vendor",
+      ignore: ["**/blades*", "**/pico.css", "**/pico.conditional*", "**/postcss.config.js"],
+    },
+  ],
+  // Base security headers on every response (static assets, 404s, routes).
+  // No CSP here: it is per content kind and set by the route handlers.
+  routeRules: {
+    "/**": { headers: BASE_SECURITY_HEADERS },
+  },
+  kv: {
     "cache:trophy": trophyStorage as unknown as never,
   },
   runtimeConfig: {

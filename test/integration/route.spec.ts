@@ -7,6 +7,8 @@ import { fileURLToPath } from "node:url";
 import routeHandler from "~/server/routes/index.get.ts";
 import { renderTrophyResponse, type RenderDeps } from "~/server/utils/render.ts";
 import type { UserInfo } from "~/lib/trophy/index.ts";
+import { CSP, type ContentKind } from "~/lib/trophy/security-headers.ts";
+import faviconHandler from "~/server/routes/favicon.ico.get.ts";
 
 const ENDPOINT = "https://api.github.com/graphql";
 const fixture = JSON.parse(
@@ -161,5 +163,52 @@ describe("GET / (pure core, injected dependencies)", () => {
     expect(r.status).toBe(502);
     expect(r.headers.get("content-type")).toBe("text/html; charset=utf-8");
     expect(r.headers.get("cache-control")).toBe(CACHE_HEADER);
+  });
+});
+
+function expectSecurity(r: Invoked, kind: ContentKind) {
+  expect(r.headers.get("content-security-policy")).toBe(CSP[kind]);
+  expect(r.headers.get("x-content-type-options")).toBe("nosniff");
+  expect(r.headers.get("cross-origin-resource-policy")).toBe("cross-origin");
+  expect(r.headers.get("strict-transport-security")).toBeTruthy();
+  expect(r.headers.get("x-frame-options")).toBeNull();
+}
+
+describe("security headers on responses", () => {
+  const deps = () => ({ tokens: ["test-token"], endpoint: ENDPOINT, ...makeMemoryCache() });
+
+  it("landing", async () => {
+    expectSecurity(await invoke(testRouteApp(deps()), "/"), "landing");
+  });
+
+  it("svg", async () => {
+    mswServer.use(http.post(ENDPOINT, () => HttpResponse.json({ data: { user: fixture } })));
+    expectSecurity(await invoke(testRouteApp(deps()), "/?username=torvalds"), "svg");
+  });
+
+  it("404", async () => {
+    mswServer.use(http.post(ENDPOINT, () => HttpResponse.json({ data: { user: null } })));
+    expectSecurity(await invoke(testRouteApp(deps()), "/?username=ghost"), "error");
+  });
+
+  it("419", async () => {
+    mswServer.use(http.post(ENDPOINT, () => new HttpResponse(null, { status: 429 })));
+    expectSecurity(await invoke(testRouteApp(deps()), "/?username=other"), "error");
+  });
+
+  it("502", async () => {
+    mswServer.use(http.post(ENDPOINT, () => new HttpResponse(null, { status: 500 })));
+    expectSecurity(await invoke(testRouteApp(deps()), "/?username=other"), "error");
+  });
+
+  it("real route: landing and no-token 502", async () => {
+    expectSecurity(await invoke(realRouteApp(), "/"), "landing");
+    expectSecurity(await invoke(realRouteApp(), "/?username=someone"), "error");
+  });
+
+  it("favicon", async () => {
+    const app = new H3();
+    app.get("/favicon.ico", faviconHandler);
+    expectSecurity(await invoke(app, "/favicon.ico"), "svg");
   });
 });

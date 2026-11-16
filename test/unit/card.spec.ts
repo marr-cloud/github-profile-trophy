@@ -34,3 +34,31 @@ describe("Card SVG shape", () => {
     expect(svg).toMatch(/<svg\s+width="\d+"\s+height="\d+"\s+viewBox="0 0 \d+ \d+"/);
   });
 });
+
+describe("Card edge cases", () => {
+  const ALL = ["-SECRET", "-SSS", "-SS", "-S", "-AAA", "-AA", "-A", "-B", "-C", "-?"];
+  it("all ranks excluded renders a zero-height card", () => {
+    const svg = new Card([], ALL, 8, 3, 110, 0, 10, false, false).render(info, COLORS.flat);
+    expect(svg).toContain('width="880"');
+    expect(svg).toContain('height="0"');
+    expect(svg).not.toContain("NaN");
+    expect(svg).not.toContain('height="-');
+  });
+  it("all ranks excluded with adaptive column renders 0x0", () => {
+    const svg = new Card([], ALL, -1, 3, 110, 0, 10, false, false).render(info, COLORS.flat);
+    expect(svg).toContain('width="0"');
+    expect(svg).toContain('height="0"');
+    expect(svg).not.toContain("NaN");
+  });
+  it("rank=-C renders one panel fewer", () => {
+    const count = (s: string) => (s.match(/<svg\s+x="\d+"\s+y="\d+"\s+width="110"\s+height="110"/g) ?? []).length;
+    const all = count(new Card([], [], 8, 3, 110, 0, 0, false, false).render(info, COLORS.flat));
+    const noC = count(new Card([], ["-C"], 8, 3, 110, 0, 0, false, false).render(info, COLORS.flat));
+    expect(all).toBe(10);
+    expect(noC).toBe(9);
+  });
+  it("row cap limits height", () => {
+    const svg = new Card([], [], 2, 1, 110, 0, 0, false, false).render(info, COLORS.flat);
+    expect(svg).toContain('height="110"');
+  });
+});
