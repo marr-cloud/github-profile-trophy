@@ -31,12 +31,12 @@ Example: `<img src="https://YOUR-HOST/?username=torvalds&theme=onedark&column=7"
 
 Behavior changes vs upstream:
 
-- Mixed lists such as `rank=S,-C` now mean "only S, minus C" (upstream treated them differently).
+- Mixed lists such as `rank=S,-C` now mean "only S, minus C" (previously the `S` include was ignored). Rank matching is exact: `S` does not match `SS`.
 - Alias exclusions such as `title=-Star` now work (upstream only matched exact exclusion names).
 
 ### Embedding
 
-Output works in `<img>` and `<iframe>` from any origin: responses send `frame-ancestors *` in the CSP and `Cross-Origin-Resource-Policy: cross-origin`. `X-Frame-Options` is intentionally not set.
+Output works in `<img>` and `<iframe>` from any origin: responses send `frame-ancestors *` in the CSP and `Cross-Origin-Resource-Policy: cross-origin`. `X-Frame-Options` is intentionally not set. Note: per CSP3, `frame-ancestors *` does not match opaque-origin ancestors (sandboxed iframes without `allow-same-origin`) or `file:`/`data:` pages, so framing the landing page from those is blocked; `<img>` embeds are unaffected.
 
 ## Environment
 
