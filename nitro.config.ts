@@ -1,5 +1,7 @@
 import { defineConfig } from "nitro";
+import { BASE_SECURITY_HEADERS } from "./lib/trophy/security-headers.ts";
 
+const isCloudflare = (process.env.NITRO_PRESET ?? "").startsWith("cloudflare");
 const trophyDriver = process.env.NITRO_STORAGE_TROPHY_DRIVER ?? "memory";
 const trophyStorage: Record<string, unknown> = { driver: trophyDriver };
 if (trophyDriver === "fs") {
@@ -22,6 +24,14 @@ export default defineConfig({
       ignore: ["**/blades*", "**/pico.css", "**/pico.conditional*", "**/postcss.config.js"],
     },
   ],
+  // Static assets on non-Cloudflare presets. On Cloudflare, public/_headers
+  // already covers them (routeRules there would be appended -> duplicate headers).
+  routeRules: isCloudflare
+    ? {}
+    : {
+        "/builder.*": { headers: BASE_SECURITY_HEADERS },
+        "/assets/**": { headers: BASE_SECURITY_HEADERS },
+      },
   kv: {
     "cache:trophy": trophyStorage as unknown as never,
   },

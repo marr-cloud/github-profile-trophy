@@ -10,6 +10,7 @@ import {
   fetchUserInfo,
   parseTrophyParams,
   renderQueryBuilder,
+  securityHeaders,
   ServiceError,
   type Theme,
   UserInfo,
@@ -42,6 +43,7 @@ function errorResult(status: number, body: string): RenderResult {
     headers: {
       "Cache-Control": CACHE_CONTROL_HEADER,
       "Content-Type": "text/html; charset=utf-8",
+      ...securityHeaders("error"),
     },
     body,
   };
@@ -66,6 +68,7 @@ export async function renderTrophyResponse(
       headers: {
         "Cache-Control": CACHE_CONTROL_HEADER,
         "Content-Type": "text/html; charset=utf-8",
+        ...securityHeaders("landing"),
       },
       body: renderQueryBuilder(baseUrl),
     };
@@ -115,6 +118,7 @@ export async function renderTrophyResponse(
     headers: {
       "Cache-Control": CACHE_CONTROL_HEADER,
       "Content-Type": "image/svg+xml; charset=utf-8",
+      ...securityHeaders("svg"),
     },
     body: card.render(userInfo, theme),
   };
