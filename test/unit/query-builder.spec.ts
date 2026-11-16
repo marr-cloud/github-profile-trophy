@@ -65,7 +65,7 @@ describe("renderQueryBuilder", () => {
         "https://github.com/ryo-ma/github-profile-trophy",
         "https://github.com/marr-cloud/github-profile-trophy#usage",
         "https://github.com/marr-cloud/github-profile-trophy/issues/new",
-        "https://github.com/ryo-ma/github-profile-trophy/blob/master/LICENSE",
+        "https://github.com/marr-cloud/github-profile-trophy/blob/main/LICENSE",
       ]
     ) {
       expect(footer).toMatch(
@@ -93,5 +93,12 @@ describe("renderQueryBuilder", () => {
 
   it("initial Columns input matches the backend default (8)", () => {
     expect(html).toMatch(/id="column"[^>]*value="8"/);
+  });
+
+  it("derives the social preview image from the request origin", () => {
+    const page = renderQueryBuilder("https://trophy.maurrod.dev/");
+    expect(page).toContain('property="og:image" content="https://trophy.maurrod.dev/og-preview.png"');
+    expect(page).toContain('name="twitter:image" content="https://trophy.maurrod.dev/og-preview.png"');
+    expect(page).not.toContain("infraforge");
   });
 });
