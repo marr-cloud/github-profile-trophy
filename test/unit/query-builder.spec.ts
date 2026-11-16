@@ -94,4 +94,11 @@ describe("renderQueryBuilder", () => {
   it("initial Columns input matches the backend default (8)", () => {
     expect(html).toMatch(/id="column"[^>]*value="8"/);
   });
+
+  it("derives the social preview image from the request origin", () => {
+    const page = renderQueryBuilder("https://trophy.maurrod.dev/");
+    expect(page).toContain('property="og:image" content="https://trophy.maurrod.dev/og-preview.png"');
+    expect(page).toContain('name="twitter:image" content="https://trophy.maurrod.dev/og-preview.png"');
+    expect(page).not.toContain("infraforge");
+  });
 });

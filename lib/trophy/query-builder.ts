@@ -40,9 +40,10 @@ const OG_DESCRIPTION = "Add dynamically generated trophy cards to your GitHub RE
  * Discord/Twitter/LinkedIn reject SVG for OG previews, so we ship a pre-
  * rendered raster of the workerscando/og-image sunset+standard card. When
  * we deploy our own OG worker with dynamic PNG output, swap this to its
- * endpoint and delete public/og-preview.png.
+ * endpoint and delete public/og-preview.png. The URL is resolved against the
+ * request's base URL so it follows whatever domain the service runs on.
  */
-const OG_IMAGE = "https://trophy.infraforge.cc/og-preview.png";
+const OG_IMAGE_PATH = "/og-preview.png";
 
 function escapeHtml(s: string): string {
   return s
@@ -73,6 +74,7 @@ const FOOTER_LINKS = [
  */
 export function renderQueryBuilder(baseUrl: string): string {
   const safeBase = escapeHtml(baseUrl);
+  const ogImage = new URL(OG_IMAGE_PATH, baseUrl).href;
   const safeDefaults = escapeHtml(JSON.stringify(DEFAULTS));
   const themeOptions = THEME_NAMES
     .map((n) => `<option value="${n}"${n === "default" ? " selected" : ""}>${n}</option>`)
@@ -100,7 +102,7 @@ export function renderQueryBuilder(baseUrl: string): string {
 <meta property="og:title" content="${escapeHtml(OG_TITLE)} — Query Builder">
 <meta property="og:description" content="${escapeHtml(OG_DESCRIPTION)}">
 <meta property="og:url" content="${safeBase}">
-<meta property="og:image" content="${escapeHtml(OG_IMAGE)}">
+<meta property="og:image" content="${escapeHtml(ogImage)}">
 <meta property="og:image:type" content="image/png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -108,7 +110,7 @@ export function renderQueryBuilder(baseUrl: string): string {
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="${escapeHtml(OG_TITLE)} — Query Builder">
 <meta name="twitter:description" content="${escapeHtml(OG_DESCRIPTION)}">
-<meta name="twitter:image" content="${escapeHtml(OG_IMAGE)}">
+<meta name="twitter:image" content="${escapeHtml(ogImage)}">
 <link rel="stylesheet" href="/vendor/pico.min.css">
 <link rel="stylesheet" href="/builder.css">
 </head>

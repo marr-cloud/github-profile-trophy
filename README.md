@@ -2,6 +2,8 @@
 
 Byte-similar reimplementation of [ryo-ma/github-profile-trophy](https://github.com/ryo-ma/github-profile-trophy) on top of Nitro v3 + h3 + Vite. Deploys to any Nitro preset — node-server, vercel, cloudflare, deno-deploy, netlify, bun, aws-lambda — without code changes.
 
+**Live:** [trophy.maurrod.dev](https://trophy.maurrod.dev/) — open it to build and preview your card (Mozilla HTTP Observatory: A+).
+
 ## Usage
 
 `GET /?username=<login>` returns an SVG. All upstream parameters are supported drop-in:
@@ -111,7 +113,7 @@ Prereqs: [`wrangler`](https://developers.cloudflare.com/workers/wrangler/install
 
    ```jsonc
    "routes": [
-     { "pattern": "trophy.infraforge.cc/*", "zone_name": "infraforge.cc", "custom_domain": true }
+     { "pattern": "trophy.maurrod.dev/*", "zone_name": "maurrod.dev", "custom_domain": true }
    ]
    ```
 
