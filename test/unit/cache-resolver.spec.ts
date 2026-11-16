@@ -93,6 +93,17 @@ describe("resolveCacheConfig", () => {
     expect(res.warnings[0]).toContain("TROPHY_CACHE_DRIVER");
   });
 
+  it("legacy redis maps to redis-env without leaking the URL", () => {
+    const res = r("node-server", {
+      NITRO_STORAGE_TROPHY_DRIVER: "redis",
+      REDIS_URL: "redis://secret@h:6379",
+    });
+    expect(res.kvMount?.driver).toBe("redis-env");
+    expect(res.requiredDeps).toEqual(["ioredis"]);
+    expect(res.warnings).toHaveLength(1);
+    expect(JSON.stringify(res)).not.toContain("secret");
+  });
+
   it("legacy fs maps with path", () => {
     const res = r("node-server", { NITRO_STORAGE_TROPHY_DRIVER: "fs", NITRO_STORAGE_TROPHY_PATH: "x" });
     expect(res.cacheDriver).toBe("fs");

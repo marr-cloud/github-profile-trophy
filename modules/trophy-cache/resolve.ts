@@ -64,6 +64,7 @@ export function resolveCacheConfig(input: {
       "cloudflare-kv-binding": "cloudflare-kv",
       fs: "fs",
       memory: "memory",
+      redis: "redis",
     };
     const m = mapped[legacy];
     if (!m) {
