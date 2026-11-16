@@ -16,10 +16,27 @@ Byte-similar reimplementation of [ryo-ma/github-profile-trophy](https://github.c
 | margin-h   | 0       |                                                       |
 | no-bg      | false   |                                                       |
 | no-frame   | false   |                                                       |
-| title      | (all)   | CSV; prefix `-` to exclude                            |
-| rank       | (all)   | CSV; prefix `-` to exclude                            |
+| title      | (all)   | CSV; prefix `-` to exclude; exclusions win            |
+| rank       | (all)   | CSV; prefix `-` to exclude; exclusions win            |
 
 Example: `<img src="https://YOUR-HOST/?username=torvalds&theme=onedark&column=7" />`
+
+### Filtering
+
+`title` and `rank` take comma-separated values. Plain values include (restrict to those), `-` prefixed values exclude (remove). Exclusion always wins. Title aliases (e.g. `Star`) are accepted for both inclusion and exclusion.
+
+- `rank=-C` — everything except rank C
+- `rank=SS,S,-C` — only SS and S (C removed; exclusion wins on conflict)
+- `title=-Star` — all trophies except the Stars one
+
+Behavior changes vs upstream:
+
+- Mixed lists such as `rank=S,-C` now mean "only S, minus C" (upstream treated them differently).
+- Alias exclusions such as `title=-Star` now work (upstream only matched exact exclusion names).
+
+### Embedding
+
+Output works in `<img>` and `<iframe>` from any origin: responses send `frame-ancestors *` in the CSP and `Cross-Origin-Resource-Policy: cross-origin`. `X-Frame-Options` is intentionally not set.
 
 ## Environment
 

@@ -1,6 +1,6 @@
 This project is based on [Nitro v3](https://nitro.build), [h3](https://h3.dev/), [Vite](https://vite.dev/) and [rolldown](https://rolldown.rs/).
 
-Refer to `node_modules/nitro/dist/docs/README.md` when working on server (your knowledge about Nitro v3 is likely outdated!).
+Refer to https://nitro.build/docs (the installed `nitro` package ships no bundled docs; see `node_modules/nitro/README.md` and `node_modules/nitro/dist/types`) when working on server (your knowledge about Nitro v3 is likely outdated!).
 
 ## Project Structure
 
