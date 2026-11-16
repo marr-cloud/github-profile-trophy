@@ -19,7 +19,7 @@ describe("renderQueryBuilder", () => {
   });
 
   it("links self-hosted assets", () => {
-    expect(html).toContain('href="/assets/pico.min.css"');
+    expect(html).toContain('href="/vendor/pico.min.css"');
     expect(html).toContain('href="/builder.css"');
     expect(html).toContain('src="/builder.js"');
   });
@@ -41,7 +41,7 @@ describe("renderQueryBuilder", () => {
       .replace(/&amp;/g, "&");
     expect(JSON.parse(json)).toEqual({
       theme: "default",
-      column: "6",
+      column: "8",
       row: "3",
       "margin-w": "0",
       "margin-h": "0",
@@ -75,9 +75,23 @@ describe("renderQueryBuilder", () => {
   });
 
   it("keeps chip glyph escapes ASCII-safe in builder.css", () => {
-    const css = readFileSync("public/builder.css", "utf8");
+    const css = readFileSync(new URL("../../public/builder.css", import.meta.url), "utf8");
     expect(css).toMatch(/\[data-state="include"\]::before \{ content: "\\2713/);
     expect(css).toMatch(/\[data-state="exclude"\]::before \{ content: "\\2715/);
     expect(css).not.toMatch(/[^\x00-\x7F]/);
+  });
+
+  it("chip CSS does not use Pico's per-button local vars", () => {
+    const css = readFileSync(new URL("../../public/builder.css", import.meta.url), "utf8");
+    const chipRules = css.match(/^[.]chip.*$/gm) ?? [];
+    expect(chipRules.length).toBeGreaterThan(0);
+    for (const rule of chipRules) {
+      expect(rule).not.toContain("var(--pico-background-color)");
+      expect(rule).not.toMatch(/var\(--pico-color\)/);
+    }
+  });
+
+  it("initial Columns input matches the backend default (8)", () => {
+    expect(html).toMatch(/id="column"[^>]*value="8"/);
   });
 });

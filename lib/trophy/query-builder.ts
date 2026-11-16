@@ -22,7 +22,7 @@ const RANK_OPTIONS = ["SECRET", "SSS", "SS", "S", "AAA", "AA", "A", "B", "C"] as
 
 const DEFAULTS = {
   theme: "default",
-  column: "6",
+  column: "8",
   row: "3",
   "margin-w": "0",
   "margin-h": "0",
@@ -53,7 +53,8 @@ function escapeHtml(s: string): string {
 }
 
 function chip(group: "title" | "rank", value: string): string {
-  return `<button type="button" class="chip" data-group="${group}" data-value="${value}" data-state="neutral" aria-pressed="false" aria-label="${value}: any">${value}</button>`;
+  const v = escapeHtml(value);
+  return `<button type="button" class="chip" data-group="${group}" data-value="${v}" data-state="neutral" aria-pressed="false" aria-label="${v}: any">${v}</button>`;
 }
 
 const FOOTER_LINKS = [
@@ -108,7 +109,7 @@ export function renderQueryBuilder(baseUrl: string): string {
 <meta name="twitter:title" content="${escapeHtml(OG_TITLE)} — Query Builder">
 <meta name="twitter:description" content="${escapeHtml(OG_DESCRIPTION)}">
 <meta name="twitter:image" content="${escapeHtml(OG_IMAGE)}">
-<link rel="stylesheet" href="/assets/pico.min.css">
+<link rel="stylesheet" href="/vendor/pico.min.css">
 <link rel="stylesheet" href="/builder.css">
 </head>
 <body>
@@ -132,7 +133,7 @@ export function renderQueryBuilder(baseUrl: string): string {
           <legend>Layout</legend>
           <div class="grid2">
             <label>Columns
-              <input type="number" id="column" data-key="column" min="-1" max="20" value="6">
+              <input type="number" id="column" data-key="column" min="-1" max="20" value="8">
             </label>
             <label>Rows
               <input type="number" id="row" data-key="row" min="1" max="10" value="3">
