@@ -100,6 +100,16 @@ describe("TrophyList", () => {
     list.filterByRanks(["-?"]);
     for (const t of list.getArray) expect(t.rank).not.toBe("?");
   });
+  it("filterByRanks(['-?']) removes unknown-rank trophies but keeps the rest", () => {
+    const before = new TrophyList(load("user-torvalds"));
+    const unknown = before.getArray.filter((t) => t.rank === "?").length;
+    expect(unknown).toBeGreaterThan(0);
+    const total = before.length;
+    before.filterByRanks(["-?"]);
+    expect(before.length).toBe(total - unknown);
+    expect(before.length).toBeGreaterThan(0);
+    for (const t of before.getArray) expect(t.rank).not.toBe("?");
+  });
   it("sortByRank orders by RANK_ORDER index (SECRET first)", () => {
     const list = new TrophyList(load("user-torvalds"));
     list.sortByRank();

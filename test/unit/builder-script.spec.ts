@@ -60,6 +60,16 @@ describe("builder.js", () => {
     expect(($("#preview") as HTMLImageElement).src).toBe(urlValue());
   });
 
+  it("encodes the unknown-rank chip ('?') and labels it Unknown", () => {
+    const c = chip("rank", "?");
+    expect(c.getAttribute("aria-label")).toBe("Unknown: any");
+    click(c, 2);
+    expect(c.getAttribute("aria-label")).toBe("Unknown: excluded");
+    const url = urlValue();
+    expect(new URL(url).searchParams.get("rank")).toBe("-?");
+    expect(url).toContain("rank=-%3F");
+  });
+
   it("excludes a title", () => {
     click(chip("title", "Star"), 2);
     expect(new URL(urlValue()).searchParams.get("title")).toBe("-Star");
