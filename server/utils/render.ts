@@ -37,11 +37,19 @@ export interface RenderResult {
   body: string;
 }
 
+/**
+ * Errors are not cached like trophies: an unknown user (404) is briefly
+ * cacheable, but transient failures (rate limit, upstream down, missing
+ * token) must not stick in browsers or CDNs for hours.
+ */
+export const NOT_FOUND_CACHE_CONTROL = "public, max-age=300";
+export const TRANSIENT_ERROR_CACHE_CONTROL = "no-store";
+
 function errorResult(status: number, body: string): RenderResult {
   return {
     status,
     headers: {
-      "Cache-Control": CACHE_CONTROL_HEADER,
+      "Cache-Control": status === 404 ? NOT_FOUND_CACHE_CONTROL : TRANSIENT_ERROR_CACHE_CONTROL,
       "Content-Type": "text/html; charset=utf-8",
       ...securityHeaders("error"),
     },

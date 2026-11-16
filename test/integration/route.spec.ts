@@ -86,7 +86,7 @@ describe("GET / (real production route)", () => {
     const r = await invoke(realRouteApp(), "/?username=someone");
     expect(r.status).toBe(502);
     expect(r.headers.get("content-type")).toBe("text/html; charset=utf-8");
-    expect(r.headers.get("cache-control")).toBe(CACHE_HEADER);
+    expect(r.headers.get("cache-control")).toBe("no-store");
     expect(r.body).toContain("no GitHub token");
   });
 });
@@ -130,7 +130,7 @@ describe("GET / (pure core, injected dependencies)", () => {
     const r = await invoke(app, "/?username=other");
     expect(r.status).toBe(419);
     expect(r.headers.get("content-type")).toBe("text/html; charset=utf-8");
-    expect(r.headers.get("cache-control")).toBe(CACHE_HEADER);
+    expect(r.headers.get("cache-control")).toBe("no-store");
   });
 
   it("user-not-found maps to 404", async () => {
@@ -146,7 +146,7 @@ describe("GET / (pure core, injected dependencies)", () => {
     const r = await invoke(app, "/?username=ghost");
     expect(r.status).toBe(404);
     expect(r.headers.get("content-type")).toBe("text/html; charset=utf-8");
-    expect(r.headers.get("cache-control")).toBe(CACHE_HEADER);
+    expect(r.headers.get("cache-control")).toBe("public, max-age=300");
   });
 
   it("upstream failure maps to 502", async () => {
@@ -162,7 +162,7 @@ describe("GET / (pure core, injected dependencies)", () => {
     const r = await invoke(app, "/?username=other");
     expect(r.status).toBe(502);
     expect(r.headers.get("content-type")).toBe("text/html; charset=utf-8");
-    expect(r.headers.get("cache-control")).toBe(CACHE_HEADER);
+    expect(r.headers.get("cache-control")).toBe("no-store");
   });
 });
 
