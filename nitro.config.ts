@@ -37,6 +37,5 @@ export default defineConfig({
     githubToken1: process.env.GITHUB_TOKEN1 ?? "",
     githubToken2: process.env.GITHUB_TOKEN2 ?? "",
     githubEndpoint: process.env.TROPHY_GITHUB_ENDPOINT ?? "https://api.github.com/graphql",
-    cacheTtlMs: 14_400_000,
   },
 });

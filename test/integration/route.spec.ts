@@ -6,7 +6,8 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import routeHandler from "~/server/routes/index.get.ts";
 import { renderTrophyResponse, type RenderDeps } from "~/server/utils/render.ts";
-import type { UserInfo } from "~/lib/trophy/index.ts";
+import type { HTTPEvent } from "nitro/h3";
+import { createUserResolver } from "~/server/utils/github-user.ts";
 import { CSP, type ContentKind } from "~/lib/trophy/security-headers.ts";
 import faviconHandler from "~/server/routes/favicon.ico.get.ts";
 
@@ -59,14 +60,26 @@ function testRouteApp(deps: RenderDeps): H3 {
   return app;
 }
 
-function makeMemoryCache() {
-  const memory = new Map<string, UserInfo>();
+function makeMemoryStorage() {
+  const map = new Map<string, unknown>();
   return {
-    getCachedUser: async (username: string) => memory.get(username) ?? null,
-    setCachedUser: async (username: string, info: UserInfo) => {
-      memory.set(username, info);
+    get: async (key: string) => (map.get(key) ?? null) as never,
+    set: async (key: string, value: unknown) => {
+      map.set(key, value);
     },
   };
+}
+
+const fakeEvent = { req: new Request("http://x/") } as unknown as HTTPEvent;
+
+/** Fresh deps (own resolver + own storage) per call. */
+function makeDeps(): RenderDeps {
+  const resolver = createUserResolver({
+    tokens: ["test-token"],
+    endpoint: ENDPOINT,
+    storage: makeMemoryStorage(),
+  });
+  return { tokens: ["test-token"], resolveUser: (u) => resolver(fakeEvent, u) };
 }
 
 const CACHE_HEADER = "public, max-age=18800, s-maxage=28800, stale-while-revalidate=86400";
@@ -100,11 +113,7 @@ describe("GET / (pure core, injected dependencies)", () => {
         return HttpResponse.json({ data: { user: fixture } });
       }),
     );
-    const app = testRouteApp({
-      tokens: ["test-token"],
-      endpoint: ENDPOINT,
-      ...makeMemoryCache(),
-    });
+    const app = testRouteApp(makeDeps());
 
     const r1 = await invoke(app, "/?username=torvalds&theme=onedark");
     expect(r1.status).toBe(200);
@@ -121,11 +130,7 @@ describe("GET / (pure core, injected dependencies)", () => {
     mswServer.use(
       http.post(ENDPOINT, () => new HttpResponse(null, { status: 429 })),
     );
-    const app = testRouteApp({
-      tokens: ["test-token"],
-      endpoint: ENDPOINT,
-      ...makeMemoryCache(),
-    });
+    const app = testRouteApp(makeDeps());
 
     const r = await invoke(app, "/?username=other");
     expect(r.status).toBe(419);
@@ -137,11 +142,7 @@ describe("GET / (pure core, injected dependencies)", () => {
     mswServer.use(
       http.post(ENDPOINT, () => HttpResponse.json({ data: { user: null } })),
     );
-    const app = testRouteApp({
-      tokens: ["test-token"],
-      endpoint: ENDPOINT,
-      ...makeMemoryCache(),
-    });
+    const app = testRouteApp(makeDeps());
 
     const r = await invoke(app, "/?username=ghost");
     expect(r.status).toBe(404);
@@ -153,11 +154,7 @@ describe("GET / (pure core, injected dependencies)", () => {
     mswServer.use(
       http.post(ENDPOINT, () => new HttpResponse(null, { status: 500 })),
     );
-    const app = testRouteApp({
-      tokens: ["test-token"],
-      endpoint: ENDPOINT,
-      ...makeMemoryCache(),
-    });
+    const app = testRouteApp(makeDeps());
 
     const r = await invoke(app, "/?username=other");
     expect(r.status).toBe(502);
@@ -175,7 +172,7 @@ function expectSecurity(r: Invoked, kind: ContentKind) {
 }
 
 describe("security headers on responses", () => {
-  const deps = () => ({ tokens: ["test-token"], endpoint: ENDPOINT, ...makeMemoryCache() });
+  const deps = () => makeDeps();
 
   it("landing", async () => {
     expectSecurity(await invoke(testRouteApp(deps()), "/"), "landing");
