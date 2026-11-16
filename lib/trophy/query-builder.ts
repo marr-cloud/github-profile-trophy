@@ -18,7 +18,10 @@ const TITLE_OPTIONS = [
   "Repository",
 ] as const;
 
-const RANK_OPTIONS = ["SECRET", "SSS", "SS", "S", "AAA", "AA", "A", "B", "C"] as const;
+const RANK_OPTIONS = ["SECRET", "SSS", "SS", "S", "AAA", "AA", "A", "B", "C", "?"] as const;
+
+/** Human-readable chip names for screen readers (defaults to the value itself). */
+const CHIP_NAMES: Record<string, string> = { "?": "Unknown" };
 
 const DEFAULTS = {
   theme: "default",
@@ -55,7 +58,8 @@ function escapeHtml(s: string): string {
 
 function chip(group: "title" | "rank", value: string): string {
   const v = escapeHtml(value);
-  return `<button type="button" class="chip" data-group="${group}" data-value="${v}" data-state="neutral" aria-pressed="false" aria-label="${v}: any">${v}</button>`;
+  const name = escapeHtml(CHIP_NAMES[value] ?? value);
+  return `<button type="button" class="chip" data-group="${group}" data-value="${v}" data-state="neutral" aria-pressed="false" aria-label="${name}: any">${v}</button>`;
 }
 
 const FOOTER_LINKS = [
@@ -164,7 +168,7 @@ export function renderQueryBuilder(baseUrl: string): string {
         <fieldset>
           <legend>Ranks</legend>
           <div class="checkgroup">${rankBoxes}</div>
-          <div class="hint">${CHIP_HINT} Exact match: <code>S</code> does not include <code>SS</code>/<code>SSS</code>.</div>
+          <div class="hint">${CHIP_HINT} Exact match: <code>S</code> does not include <code>SS</code>/<code>SSS</code>. <code>?</code> = no rank yet.</div>
         </fieldset>
       </form>
       <section class="panel">

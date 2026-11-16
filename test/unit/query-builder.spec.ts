@@ -51,8 +51,9 @@ describe("renderQueryBuilder", () => {
   });
   it("renders tri-state chips for titles and ranks", () => {
     expect(html.match(/data-group="title"/g)).toHaveLength(15);
-    expect(html.match(/data-group="rank"/g)).toHaveLength(9);
-    expect(html.match(/data-state="neutral" aria-pressed="false"/g)).toHaveLength(24);
+    expect(html.match(/data-group="rank"/g)).toHaveLength(10);
+    expect(html.match(/data-state="neutral" aria-pressed="false"/g)).toHaveLength(25);
+    expect(html).toContain('data-group="rank" data-value="?" data-state="neutral" aria-pressed="false" aria-label="Unknown: any">?</button>');
     expect(html).not.toContain('<input type="checkbox" name="rank"');
     expect(html).not.toContain('<input type="checkbox" name="title"');
   });

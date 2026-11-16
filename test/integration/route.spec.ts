@@ -1,4 +1,5 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { useRuntimeConfig } from "nitro/runtime-config";
 import { http, HttpResponse } from "msw";
 import { mswServer } from "~/test/setup.ts";
 import { H3, defineEventHandler, getRequestURL } from "nitro/h3";
@@ -6,8 +7,10 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import routeHandler from "~/server/routes/index.get.ts";
 import { renderTrophyResponse, type RenderDeps } from "~/server/utils/render.ts";
-import type { UserInfo } from "~/lib/trophy/index.ts";
+import type { HTTPEvent } from "nitro/h3";
+import { createUserResolver } from "~/server/utils/github-user.ts";
 import { CSP, type ContentKind } from "~/lib/trophy/security-headers.ts";
+import { UserInfo } from "~/lib/trophy/index.ts";
 import faviconHandler from "~/server/routes/favicon.ico.get.ts";
 
 const ENDPOINT = "https://api.github.com/graphql";
@@ -59,14 +62,26 @@ function testRouteApp(deps: RenderDeps): H3 {
   return app;
 }
 
-function makeMemoryCache() {
-  const memory = new Map<string, UserInfo>();
+function makeMemoryStorage() {
+  const map = new Map<string, unknown>();
   return {
-    getCachedUser: async (username: string) => memory.get(username) ?? null,
-    setCachedUser: async (username: string, info: UserInfo) => {
-      memory.set(username, info);
+    get: async (key: string) => (map.get(key) ?? null) as never,
+    set: async (key: string, value: unknown) => {
+      map.set(key, value);
     },
   };
+}
+
+const fakeEvent = { req: new Request("http://x/") } as unknown as HTTPEvent;
+
+/** Fresh deps (own resolver + own storage) per call. */
+function makeDeps(): RenderDeps {
+  const resolver = createUserResolver({
+    tokens: ["test-token"],
+    endpoint: ENDPOINT,
+    storage: makeMemoryStorage(),
+  });
+  return { tokens: ["test-token"], resolveUser: (u) => resolver(fakeEvent, u) };
 }
 
 const CACHE_HEADER = "public, max-age=18800, s-maxage=28800, stale-while-revalidate=86400";
@@ -91,7 +106,46 @@ describe("GET / (real production route)", () => {
   });
 });
 
+describe("GET / (real production route, with a token)", () => {
+  afterEach(() => {
+    delete (useRuntimeConfig() as Record<string, unknown>).githubTokens;
+  });
+
+  it("renders the SVG for a username through the real handler", async () => {
+    // Outside a Nitro build the runtime config is a plain mutable object.
+    (useRuntimeConfig() as Record<string, unknown>).githubTokens = "real-route-token";
+    let calls = 0;
+    mswServer.use(
+      http.post(ENDPOINT, () => {
+        calls++;
+        return HttpResponse.json({ data: { user: fixture } });
+      }),
+    );
+    const r = await invoke(realRouteApp(), "/?username=real-route-user");
+    expect(r.status).toBe(200);
+    expect(r.headers.get("content-type")).toBe("image/svg+xml; charset=utf-8");
+    expect(r.body).toContain("<svg");
+    expect(calls).toBe(1);
+  });
+});
+
 describe("GET / (pure core, injected dependencies)", () => {
+  it("invalid GitHub login returns the same 404 as not-found without calling GitHub", async () => {
+    let calls = 0;
+    mswServer.use(
+      http.post(ENDPOINT, () => {
+        calls++;
+        return HttpResponse.json({ data: { user: null } });
+      }),
+    );
+    const r = await invoke(testRouteApp(makeDeps()), "/?username=a--b");
+    expect(r.status).toBe(404);
+    expect(r.headers.get("content-type")).toBe("text/html; charset=utf-8");
+    expect(r.headers.get("cache-control")).toBe("public, max-age=300");
+    expectSecurity(r, "error");
+    expect(calls).toBe(0);
+  });
+
   it("returns SVG on happy path and caches for the next call", async () => {
     let calls = 0;
     mswServer.use(
@@ -100,11 +154,7 @@ describe("GET / (pure core, injected dependencies)", () => {
         return HttpResponse.json({ data: { user: fixture } });
       }),
     );
-    const app = testRouteApp({
-      tokens: ["test-token"],
-      endpoint: ENDPOINT,
-      ...makeMemoryCache(),
-    });
+    const app = testRouteApp(makeDeps());
 
     const r1 = await invoke(app, "/?username=torvalds&theme=onedark");
     expect(r1.status).toBe(200);
@@ -121,11 +171,7 @@ describe("GET / (pure core, injected dependencies)", () => {
     mswServer.use(
       http.post(ENDPOINT, () => new HttpResponse(null, { status: 429 })),
     );
-    const app = testRouteApp({
-      tokens: ["test-token"],
-      endpoint: ENDPOINT,
-      ...makeMemoryCache(),
-    });
+    const app = testRouteApp(makeDeps());
 
     const r = await invoke(app, "/?username=other");
     expect(r.status).toBe(419);
@@ -137,11 +183,7 @@ describe("GET / (pure core, injected dependencies)", () => {
     mswServer.use(
       http.post(ENDPOINT, () => HttpResponse.json({ data: { user: null } })),
     );
-    const app = testRouteApp({
-      tokens: ["test-token"],
-      endpoint: ENDPOINT,
-      ...makeMemoryCache(),
-    });
+    const app = testRouteApp(makeDeps());
 
     const r = await invoke(app, "/?username=ghost");
     expect(r.status).toBe(404);
@@ -153,16 +195,26 @@ describe("GET / (pure core, injected dependencies)", () => {
     mswServer.use(
       http.post(ENDPOINT, () => new HttpResponse(null, { status: 500 })),
     );
-    const app = testRouteApp({
-      tokens: ["test-token"],
-      endpoint: ENDPOINT,
-      ...makeMemoryCache(),
-    });
+    const app = testRouteApp(makeDeps());
 
     const r = await invoke(app, "/?username=other");
     expect(r.status).toBe(502);
     expect(r.headers.get("content-type")).toBe("text/html; charset=utf-8");
     expect(r.headers.get("cache-control")).toBe("no-store");
+  });
+
+  it("unexpected resolver failure (e.g. cache timeout) maps to 502 no-store", async () => {
+    mswServer.use(http.post(ENDPOINT, () => HttpResponse.json({ data: { user: fixture } })));
+    vi.spyOn(UserInfo, "fromJSON").mockImplementation(() => {
+      throw new Error("timeout");
+    });
+    try {
+      const r = await invoke(testRouteApp(makeDeps()), "/?username=other");
+      expect(r.status).toBe(502);
+      expect(r.headers.get("cache-control")).toBe("no-store");
+    } finally {
+      vi.restoreAllMocks();
+    }
   });
 });
 
@@ -175,7 +227,7 @@ function expectSecurity(r: Invoked, kind: ContentKind) {
 }
 
 describe("security headers on responses", () => {
-  const deps = () => ({ tokens: ["test-token"], endpoint: ENDPOINT, ...makeMemoryCache() });
+  const deps = () => makeDeps();
 
   it("landing", async () => {
     expectSecurity(await invoke(testRouteApp(deps()), "/"), "landing");

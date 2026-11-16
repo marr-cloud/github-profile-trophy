@@ -7,7 +7,7 @@ import {
   Error419,
   Error502,
   EServiceKindError,
-  fetchUserInfo,
+  isValidGitHubLogin,
   parseTrophyParams,
   renderQueryBuilder,
   securityHeaders,
@@ -25,10 +25,7 @@ import {
  */
 export interface RenderDeps {
   tokens: string[];
-  endpoint: string;
-  fetchImpl?: typeof fetch;
-  getCachedUser: (username: string) => Promise<UserInfo | null>;
-  setCachedUser: (username: string, info: UserInfo) => Promise<void>;
+  resolveUser: (username: string) => Promise<UserInfo | ServiceError>;
 }
 
 export interface RenderResult {
@@ -82,31 +79,28 @@ export async function renderTrophyResponse(
     };
   }
 
-  let userInfo = await deps.getCachedUser(params.username);
-
-  if (!userInfo) {
-    if (deps.tokens.length === 0) {
-      return errorResult(502, new Error502("no GitHub token configured").render());
-    }
-
-    const result = await fetchUserInfo(params.username, {
-      tokens: deps.tokens,
-      endpoint: deps.endpoint,
-      fetchImpl: deps.fetchImpl,
-    });
-
-    if (result instanceof ServiceError) {
-      const ErrorCtor = result.kind === EServiceKindError.NOT_FOUND
-        ? Error404
-        : result.kind === EServiceKindError.RATE_LIMIT
-        ? Error419
-        : Error502;
-      return errorResult(result.code, new ErrorCtor(result.message).render());
-    }
-
-    userInfo = result;
-    await deps.setCachedUser(params.username, userInfo);
+  if (deps.tokens.length === 0) {
+    return errorResult(502, new Error502("no GitHub token configured").render());
   }
+
+  // Garbage logins can never exist on GitHub: answer 404 without a lookup
+  // (and without creating a cache entry per arbitrary string).
+  if (!isValidGitHubLogin(params.username)) {
+    return errorResult(404, new Error404("User not found").render());
+  }
+
+  const result = await deps.resolveUser(params.username);
+
+  if (result instanceof ServiceError) {
+    const ErrorCtor = result.kind === EServiceKindError.NOT_FOUND
+      ? Error404
+      : result.kind === EServiceKindError.RATE_LIMIT
+      ? Error419
+      : Error502;
+    return errorResult(result.code, new ErrorCtor(result.message).render());
+  }
+
+  const userInfo = result;
 
   const theme: Theme = COLORS[params.theme] ?? COLORS.default;
   const card = new Card(

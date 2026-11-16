@@ -12,6 +12,7 @@
 
   var STATES = ["neutral", "include", "exclude"];
   var PRESSED = { neutral: "false", include: "true", exclude: "mixed" };
+  var NAMES = { "?": "Unknown" };
   var LABELS = { neutral: "any", include: "included", exclude: "excluded" };
 
   function collect(group) {
@@ -27,7 +28,7 @@
     var next = STATES[(STATES.indexOf(chip.dataset.state) + 1) % STATES.length];
     chip.dataset.state = next;
     chip.setAttribute("aria-pressed", PRESSED[next]);
-    chip.setAttribute("aria-label", chip.dataset.value + ": " + LABELS[next]);
+    chip.setAttribute("aria-label", (NAMES[chip.dataset.value] || chip.dataset.value) + ": " + LABELS[next]);
   }
 
   function build() {

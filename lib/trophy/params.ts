@@ -1,5 +1,15 @@
 import { CONSTANTS, CustomURLSearchParams } from "~/lib/trophy/utils.ts";
 
+/**
+ * GitHub login rule: 1-39 alphanumerics/hyphens, no leading, trailing or doubled hyphen.
+ * Underscores are allowed after the first character (EMU logins like `octocat_acme`, GHES).
+ */
+const GITHUB_LOGIN = /^[a-z\d](?:[a-z\d_]|-(?=[a-z\d])){0,38}$/i;
+
+export function isValidGitHubLogin(username: string): boolean {
+  return GITHUB_LOGIN.test(username);
+}
+
 export interface TrophyParams {
   username: string | null;
   theme: string;
