@@ -52,10 +52,10 @@ describe("parseTrophyParams", () => {
 });
 
 describe("isValidGitHubLogin", () => {
-  it.each(["torvalds", "a", "octo-cat", "a".repeat(39), "A1-b2"])("accepts %s", (u) => {
+  it.each(["torvalds", "a", "octo-cat", "a".repeat(39), "A1-b2", "octocat_acme", "a_"])("accepts %s", (u) => {
     expect(isValidGitHubLogin(u)).toBe(true);
   });
-  it.each(["-a", "a-", "a--b", "a".repeat(40), "a_b", "a/b", '"><', ""])("rejects %j", (u) => {
+  it.each(["-a", "a-", "a--b", "a".repeat(40), "_a", "a/b", '"><', ""])("rejects %j", (u) => {
     expect(isValidGitHubLogin(u)).toBe(false);
   });
 });
