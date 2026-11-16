@@ -15,7 +15,7 @@ if (trophyDriver === "cloudflare-kv-binding") {
 export default defineConfig({
   compatibilityDate: "2026-08-15",
   serverDir: "./server",
-  storage: {
+  kv: {
     "cache:trophy": trophyStorage as unknown as never,
   },
   runtimeConfig: {
