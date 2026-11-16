@@ -65,7 +65,7 @@ describe("renderQueryBuilder", () => {
         "https://github.com/ryo-ma/github-profile-trophy",
         "https://github.com/marr-cloud/github-profile-trophy#usage",
         "https://github.com/marr-cloud/github-profile-trophy/issues/new",
-        "https://github.com/ryo-ma/github-profile-trophy/blob/master/LICENSE",
+        "https://github.com/marr-cloud/github-profile-trophy/blob/main/LICENSE",
       ]
     ) {
       expect(footer).toMatch(

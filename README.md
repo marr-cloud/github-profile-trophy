@@ -121,4 +121,6 @@ Trophy artwork (`public/favicon.svg`, `app/assets/trophy.svg`) is the 🏆 glyph
 
 ## License
 
-MIT.
+MIT — see [LICENSE](LICENSE). Based on [ryo-ma/github-profile-trophy](https://github.com/ryo-ma/github-profile-trophy) (MIT, © 2020 ryo-ma).
+
+Error responses are cached briefly: `404` (unknown user) with `public, max-age=300`; `419`/`502` (rate limit, upstream failure, missing token) with `no-store`.

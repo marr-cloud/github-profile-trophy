@@ -62,7 +62,7 @@ const FOOTER_LINKS = [
   ["Original project", "https://github.com/ryo-ma/github-profile-trophy"],
   ["Parameters", "https://github.com/marr-cloud/github-profile-trophy#usage"],
   ["Report an issue", "https://github.com/marr-cloud/github-profile-trophy/issues/new"],
-  ["License (MIT)", "https://github.com/ryo-ma/github-profile-trophy/blob/master/LICENSE"],
+  ["License (MIT)", "https://github.com/marr-cloud/github-profile-trophy/blob/main/LICENSE"],
 ] as const;
 
 /**
