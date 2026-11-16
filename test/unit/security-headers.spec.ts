@@ -1,3 +1,4 @@
+import nitroConfig from "../../nitro.config.ts";
 import { describe, expect, it } from "vitest";
 import { BASE_SECURITY_HEADERS, CSP, securityHeaders, type ContentKind } from "~/lib/trophy/security-headers.ts";
 
@@ -24,4 +25,15 @@ describe("security headers", () => {
       expect(Object.keys(h).some((k) => /x-frame-options/i.test(k))).toBe(false);
     });
   }
+
+  it("nitro routeRules apply base headers to every response, without CSP", () => {
+    const rules = (nitroConfig.routeRules ?? {}) as Record<string, { headers?: Record<string, string> }>;
+    expect(rules["/**"]?.headers).toEqual(BASE_SECURITY_HEADERS);
+    expect(Object.keys(rules["/**"]?.headers ?? {}).some((k) => /content-security-policy/i.test(k))).toBe(false);
+  });
+
+  it("publicAssets are served under /vendor (never the immutable /assets dir)", () => {
+    const dirs = (nitroConfig.publicAssets ?? []) as { baseURL?: string }[];
+    expect(dirs.map((d) => d.baseURL)).toEqual(["/vendor"]);
+  });
 });
