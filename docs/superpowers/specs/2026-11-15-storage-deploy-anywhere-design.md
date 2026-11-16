@@ -122,7 +122,7 @@ Env override (build-time; the owner's and power users' escape hatch):
 - Update the Environment table (new vars, deprecated old ones).
 - Cloudflare section: `build:cf` no longer needs storage env vars (keep `NITRO_PRESET` only if Workers Builds needs it). Add a note that Workers Builds' build command can be plain `pnpm build`.
 - Workers Builds' build command stays `pnpm run build`. `build:cf` keeps working but no longer needs storage env vars.
-- **Legacy cleanup (owner approved, 2026-11-15):** existing `v1-<username>` entries in `TROPHY_KV` never expire (written without TTL). The owner saw them in the dashboard, all with `expiresAt` in Aug 2026. Add a repo script `pnpm cache:purge-legacy` (Node, cross-platform, no `jq`) that shells out to `wrangler kv key list --binding TROPHY_KV --prefix v1- --remote` and `wrangler kv bulk delete --binding TROPHY_KV --remote` on the listed names. **Dry-run by default** (prints count and keys); `--yes` deletes. No recurring job: new entries carry native TTL, so this is a one-off. The owner runs it after deploy; the build work never runs it against the remote.
+- **Legacy cleanup:** the pre-TTL `v1-<username>` entries in `TROPHY_KV` were deleted by hand by the owner (2026-11-15). No script or recurring job: new entries carry native TTL.
 
 ### 6.5 Tests
 - Resolver unit tests: each preset family → expected driver; every `TROPHY_CACHE_DRIVER` value; legacy var mapping; `none`; dev override.
