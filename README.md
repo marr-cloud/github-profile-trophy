@@ -40,6 +40,27 @@ Behavior changes vs upstream:
 
 Output works in `<img>` and `<iframe>` from any origin: responses send `frame-ancestors *` in the CSP and `Cross-Origin-Resource-Policy: cross-origin`. `X-Frame-Options` is intentionally not set. Note: per CSP3, `frame-ancestors *` does not match opaque-origin ancestors (sandboxed iframes without `allow-same-origin`) or `file:`/`data:` pages, so framing the landing page from those is blocked; `<img>` embeds are unaffected.
 
+## Caching
+
+- Each GitHub user lookup is fresh for 4 h; for up to 24 h more it is served stale while a background refresh runs.
+- Usernames are case-insensitive (`Torvalds` and `torvalds` share one entry).
+- Errors are never stored, and invalid GitHub logins return 404 without calling GitHub.
+
+## Deploy anywhere
+
+The cache driver is chosen automatically from the detected Nitro preset at build time (`vite dev` uses the filesystem, `.data/cache`).
+
+| Platform | What to do | Cache used |
+|----------|------------|------------|
+| Cloudflare Workers | Nothing. The first deploy auto-creates the `TROPHY_KV` namespace. | KV binding `TROPHY_KV` (without the binding: in-memory, with one warning) |
+| Vercel | Nothing. | Vercel Runtime Cache |
+| Deno Deploy | Nothing. | Deno KV |
+| Netlify | Nothing. | In-memory. Opt-in Netlify Blobs (`TROPHY_CACHE_DRIVER=netlify`, `pnpm add @netlify/blobs`) does not expire entries. |
+| Node / Docker / Bun | Nothing. | Bounded in-memory LRU. Set `REDIS_URL` + `TROPHY_CACHE_DRIVER=redis` (`pnpm add ioredis`) to share across instances. |
+| Any platform | Set `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` and `TROPHY_CACHE_DRIVER=upstash` (`pnpm add @upstash/redis`). | Upstash Redis |
+
+If an optional driver package is missing, the build fails with a clear message.
+
 ## Environment
 
 | Var                             | Purpose                                          | Default          |
@@ -47,10 +68,12 @@ Output works in `<img>` and `<iframe>` from any origin: responses send `frame-an
 | `GITHUB_TOKEN`                  | Comma-separated PATs                             | —                |
 | `GITHUB_TOKEN1`, `GITHUB_TOKEN2`| Upstream-compat aliases                          | —                |
 | `NITRO_PRESET`                  | Deploy target                                    | `node-server`    |
-| `NITRO_STORAGE_TROPHY_DRIVER`   | `memory` / `redis` / `fs` / `cloudflare-kv-binding` | `memory`      |
-| `NITRO_STORAGE_TROPHY_BINDING`  | KV binding name when driver=cloudflare-kv-binding | `TROPHY_KV`     |
-| `REDIS_URL`                     | when driver=redis                                | —                |
-| `NITRO_STORAGE_TROPHY_PATH`     | when driver=fs                                   | `.data/trophy`   |
+| `TROPHY_CACHE_DRIVER`           | `auto` / `memory` / `fs` / `redis` / `upstash` / `cloudflare-kv` / `vercel` / `netlify` / `deno-kv` / `none` | `auto` |
+| `TROPHY_KV_BINDING`             | KV binding name for the Cloudflare driver        | `TROPHY_KV`      |
+| `TROPHY_CACHE_DIR`              | Directory for the `fs` driver                    | `.data/cache`    |
+| `REDIS_URL`                     | Redis connection (runtime), driver `redis`       | —                |
+| `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | Upstash credentials (runtime); `KV_REST_API_URL` / `KV_REST_API_TOKEN` also work | — |
+| `NITRO_STORAGE_TROPHY_DRIVER`, `_BINDING`, `_PATH` | Deprecated: still honored with a warning; use the `TROPHY_*` vars | — |
 | `TROPHY_GITHUB_ENDPOINT`        | override GraphQL URL (GHES/tests)                | `https://api.github.com/graphql` |
 
 On Cloudflare Workers, set the runtime token via `wrangler secret put NITRO_GITHUB_TOKENS` — Nitro maps `NITRO_*` env vars into `useRuntimeConfig()` at runtime (see the Cloudflare deploy section below).
@@ -80,36 +103,32 @@ NITRO_PRESET=node-server pnpm build
 
 Prereqs: [`wrangler`](https://developers.cloudflare.com/workers/wrangler/install-and-update/) installed and logged in (`wrangler login`), and a GitHub PAT with `public_repo` + `read:user` scopes (create at <https://github.com/settings/tokens>).
 
-1. **Create the KV namespace** and copy the returned `id`:
+`wrangler.jsonc` declares the `TROPHY_KV` binding without an `id`; Wrangler 4.x auto-provisions the namespace on the first deploy, so there is nothing to create or paste. Without the binding the app falls back to in-memory cache and logs one warning. Cloudflare Workers Builds needs no special build command: plain `pnpm run build` + `npx wrangler deploy` auto-detects Cloudflare.
 
-   ```bash
-   wrangler kv namespace create trophy_cache
-   ```
+The KV free plan has a daily write cap. Each cache miss or background refresh is one write; if writes fail the request degrades to uncached instead of erroring.
 
-2. **Paste that id** into `wrangler.jsonc` (replace `REPLACE_WITH_KV_NAMESPACE_ID`).
-
-3. **Build for Cloudflare** (works in bash / zsh / PowerShell / cmd via `cross-env`):
+1. **Build for Cloudflare** (works in bash / zsh / PowerShell / cmd via `cross-env`; sets `NITRO_PRESET=cloudflare_module`):
 
    ```bash
    pnpm build:cf
    ```
 
-4. **Store your GitHub PAT** as a Worker secret. Nitro maps `NITRO_*` env vars into `useRuntimeConfig()` at runtime, so use this exact name:
+2. **Store your GitHub PAT** as a Worker secret. Nitro maps `NITRO_*` env vars into `useRuntimeConfig()` at runtime, so use this exact name:
 
    ```bash
    wrangler secret put NITRO_GITHUB_TOKENS
    # paste your PAT when prompted (comma-separated for multiple tokens)
    ```
 
-5. **Deploy** (or use `pnpm deploy:cf` to build + deploy in one step):
+3. **Deploy** (or use `pnpm deploy:cf` to build + deploy in one step):
 
    ```bash
    wrangler deploy
    ```
 
-6. **Test** at `https://github-profile-trophy.<your-account>.workers.dev/?username=<your-github>&theme=onedark`.
+4. **Test** at `https://github-profile-trophy.<your-account>.workers.dev/?username=<your-github>&theme=onedark`.
 
-7. **Custom domain** (optional; only if the zone is in your Cloudflare account): add a `routes` block to `wrangler.jsonc` and redeploy:
+5. **Custom domain** (optional; only if the zone is in your Cloudflare account): add a `routes` block to `wrangler.jsonc` and redeploy:
 
    ```jsonc
    "routes": [
