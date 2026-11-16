@@ -7,6 +7,7 @@ import {
   Error419,
   Error502,
   EServiceKindError,
+  isValidGitHubLogin,
   parseTrophyParams,
   renderQueryBuilder,
   securityHeaders,
@@ -80,6 +81,12 @@ export async function renderTrophyResponse(
 
   if (deps.tokens.length === 0) {
     return errorResult(502, new Error502("no GitHub token configured").render());
+  }
+
+  // Garbage logins can never exist on GitHub: answer 404 without a lookup
+  // (and without creating a cache entry per arbitrary string).
+  if (!isValidGitHubLogin(params.username)) {
+    return errorResult(404, new Error404("User not found").render());
   }
 
   const result = await deps.resolveUser(params.username);

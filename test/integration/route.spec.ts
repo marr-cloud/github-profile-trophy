@@ -1,4 +1,5 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
+import { useRuntimeConfig } from "nitro/runtime-config";
 import { http, HttpResponse } from "msw";
 import { mswServer } from "~/test/setup.ts";
 import { H3, defineEventHandler, getRequestURL } from "nitro/h3";
@@ -104,7 +105,46 @@ describe("GET / (real production route)", () => {
   });
 });
 
+describe("GET / (real production route, with a token)", () => {
+  afterEach(() => {
+    delete (useRuntimeConfig() as Record<string, unknown>).githubTokens;
+  });
+
+  it("renders the SVG for a username through the real handler", async () => {
+    // Outside a Nitro build the runtime config is a plain mutable object.
+    (useRuntimeConfig() as Record<string, unknown>).githubTokens = "real-route-token";
+    let calls = 0;
+    mswServer.use(
+      http.post(ENDPOINT, () => {
+        calls++;
+        return HttpResponse.json({ data: { user: fixture } });
+      }),
+    );
+    const r = await invoke(realRouteApp(), "/?username=real-route-user");
+    expect(r.status).toBe(200);
+    expect(r.headers.get("content-type")).toBe("image/svg+xml; charset=utf-8");
+    expect(r.body).toContain("<svg");
+    expect(calls).toBe(1);
+  });
+});
+
 describe("GET / (pure core, injected dependencies)", () => {
+  it("invalid GitHub login returns the same 404 as not-found without calling GitHub", async () => {
+    let calls = 0;
+    mswServer.use(
+      http.post(ENDPOINT, () => {
+        calls++;
+        return HttpResponse.json({ data: { user: null } });
+      }),
+    );
+    const r = await invoke(testRouteApp(makeDeps()), "/?username=a--b");
+    expect(r.status).toBe(404);
+    expect(r.headers.get("content-type")).toBe("text/html; charset=utf-8");
+    expect(r.headers.get("cache-control")).toBe("public, max-age=300");
+    expectSecurity(r, "error");
+    expect(calls).toBe(0);
+  });
+
   it("returns SVG on happy path and caches for the next call", async () => {
     let calls = 0;
     mswServer.use(

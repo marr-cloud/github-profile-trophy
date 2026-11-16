@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseTrophyParams } from "~/lib/trophy/params.ts";
+import { isValidGitHubLogin, parseTrophyParams } from "~/lib/trophy/params.ts";
 
 describe("parseTrophyParams", () => {
   it("returns defaults when only username present", () => {
@@ -48,5 +48,14 @@ describe("parseTrophyParams", () => {
     const usp = new URLSearchParams("username=bob&theme=dracula");
     expect(parseTrophyParams(usp).theme).toBe("dracula");
     expect(parseTrophyParams(usp).username).toBe("bob");
+  });
+});
+
+describe("isValidGitHubLogin", () => {
+  it.each(["torvalds", "a", "octo-cat", "a".repeat(39), "A1-b2"])("accepts %s", (u) => {
+    expect(isValidGitHubLogin(u)).toBe(true);
+  });
+  it.each(["-a", "a-", "a--b", "a".repeat(40), "a_b", "a/b", '"><', ""])("rejects %j", (u) => {
+    expect(isValidGitHubLogin(u)).toBe(false);
   });
 });

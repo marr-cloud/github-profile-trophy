@@ -12,15 +12,20 @@ const fixture = JSON.parse(
   readFileSync(fileURLToPath(new URL("../fixtures/user-torvalds.json", import.meta.url)), "utf8"),
 );
 
-const ev = { req: new Request("http://x/") } as unknown as HTTPEvent;
+const waitUntil = vi.fn();
+const ev = {
+  req: Object.assign(new Request("http://x/"), { waitUntil }),
+} as unknown as HTTPEvent;
 
 /** Minimal ocache StorageInterface backed by a Map (ocache itself is not a direct dependency). */
 function memoryStorage() {
   const map = new Map<string, unknown>();
   return {
     map,
+    writes: [] as string[],
     get: async (key: string) => (map.get(key) ?? null) as never,
-    set: async (key: string, value: unknown) => {
+    set: async function (this: { writes: string[] }, key: string, value: unknown) {
+      this.writes.push(key);
       map.set(key, value);
     },
   };
@@ -35,7 +40,11 @@ function countingHandler(body: () => Response, counter: { n: number }) {
 
 const ok = () => HttpResponse.json({ data: { user: fixture } });
 
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.useRealTimers();
+  waitUntil.mockClear();
+});
 
 describe("createUserResolver", () => {
   it("caches: two sequential calls hit GitHub once", async () => {
@@ -78,6 +87,40 @@ describe("createUserResolver", () => {
     expect((a as ServiceError).code).toBe(404);
     await resolve(ev, "ghost");
     expect(c.n).toBe(2);
+  });
+
+  it("a 404 miss makes no storage set/remove calls", async () => {
+    mswServer.use(countingHandler(() => HttpResponse.json({ data: { user: null } }), { n: 0 }));
+    const storage = memoryStorage();
+    const resolve = createUserResolver({ tokens: ["t"], endpoint: ENDPOINT, storage });
+    await resolve(ev, "ghost");
+    expect(storage.writes).toEqual([]);
+    expect(storage.map.size).toBe(0);
+  });
+
+  it("registers the cache write with waitUntil on a miss", async () => {
+    mswServer.use(countingHandler(ok, { n: 0 }));
+    const resolve = createUserResolver({ tokens: ["t"], endpoint: ENDPOINT, storage: memoryStorage() });
+    await resolve(ev, "torvalds");
+    expect(waitUntil).toHaveBeenCalled();
+  });
+
+  it("serves the stale user when the SWR refresh returns a ServiceError", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    const c = { n: 0 };
+    mswServer.use(countingHandler(ok, c));
+    const storage = memoryStorage();
+    const resolve = createUserResolver({ tokens: ["t"], endpoint: ENDPOINT, storage });
+    const first = (await resolve(ev, "torvalds")) as UserInfo;
+    vi.setSystemTime(Date.now() + 5 * 3600 * 1000); // past maxAge (4h), inside staleMaxAge
+    mswServer.use(countingHandler(() => HttpResponse.json({ data: { user: null } }), c));
+    const stale = await resolve(ev, "torvalds");
+    expect(stale).toBeInstanceOf(UserInfo);
+    expect((stale as UserInfo).totalCommits).toBe(first.totalCommits);
+    await vi.waitFor(() => expect(c.n).toBe(2));
+    await new Promise((r) => setTimeout(r, 20));
+    expect(storage.writes.length).toBe(1); // no error write, no null eviction
+    expect(storage.map.get([...storage.map.keys()][0])).not.toBeNull();
   });
 
   it("storage failures are logged and still render", async () => {
