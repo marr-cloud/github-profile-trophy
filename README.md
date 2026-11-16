@@ -59,6 +59,10 @@ The cache driver is chosen automatically from the detected Nitro preset at build
 | Node / Docker / Bun | Nothing. | Bounded in-memory LRU. Set `REDIS_URL` + `TROPHY_CACHE_DRIVER=redis` (`pnpm add ioredis`) to share across instances. |
 | Any platform | Set `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` and `TROPHY_CACHE_DRIVER=upstash` (`pnpm add @upstash/redis`). | Upstash Redis |
 
+Self-hosting with `NITRO_PRESET=deno-server` requires running Deno with `--unstable-kv` (or set `TROPHY_CACHE_DRIVER=memory`); otherwise the cache is disabled (errors are logged, requests do not 500).
+
+Without a GitHub token every trophy request returns 502, even for users that were cached before.
+
 If an optional driver package is missing, the build fails with a clear message.
 
 ## Environment
@@ -73,7 +77,7 @@ If an optional driver package is missing, the build fails with a clear message.
 | `TROPHY_CACHE_DIR`              | Directory for the `fs` driver                    | `.data/cache`    |
 | `REDIS_URL`                     | Redis connection (runtime), driver `redis`       | —                |
 | `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | Upstash credentials (runtime); `KV_REST_API_URL` / `KV_REST_API_TOKEN` also work | — |
-| `NITRO_STORAGE_TROPHY_DRIVER`, `_BINDING`, `_PATH` | Deprecated: still honored with a warning; use the `TROPHY_*` vars | — |
+| `NITRO_STORAGE_TROPHY_DRIVER`, `_BINDING`, `_PATH` | Deprecated; only used when `TROPHY_CACHE_DRIVER` is unset (logs a warning). Legacy driver accepts `memory\|fs\|redis\|cloudflare-kv-binding`; prefer the `TROPHY_*` vars | — |
 | `TROPHY_GITHUB_ENDPOINT`        | override GraphQL URL (GHES/tests)                | `https://api.github.com/graphql` |
 
 On Cloudflare Workers, set the runtime token via `wrangler secret put NITRO_GITHUB_TOKENS` — Nitro maps `NITRO_*` env vars into `useRuntimeConfig()` at runtime (see the Cloudflare deploy section below).
@@ -103,7 +107,7 @@ NITRO_PRESET=node-server pnpm build
 
 Prereqs: [`wrangler`](https://developers.cloudflare.com/workers/wrangler/install-and-update/) installed and logged in (`wrangler login`), and a GitHub PAT with `public_repo` + `read:user` scopes (create at <https://github.com/settings/tokens>).
 
-`wrangler.jsonc` declares the `TROPHY_KV` binding without an `id`; Wrangler 4.x auto-provisions the namespace on the first deploy, so there is nothing to create or paste. Without the binding the app falls back to in-memory cache and logs one warning. Cloudflare Workers Builds needs no special build command: plain `pnpm run build` + `npx wrangler deploy` auto-detects Cloudflare.
+`wrangler.jsonc` declares the `TROPHY_KV` binding without an `id`; recent Wrangler versions auto-provision the namespace on the first deploy, so there is nothing to create or paste. Without the binding the app falls back to in-memory cache and logs one warning. Cloudflare Workers Builds needs no special build command: plain `pnpm run build` + `npx wrangler deploy` auto-detects Cloudflare.
 
 The KV free plan has a daily write cap. Each cache miss or background refresh is one write; if writes fail the request degrades to uncached instead of erroring.
 

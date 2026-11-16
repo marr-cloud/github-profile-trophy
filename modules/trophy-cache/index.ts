@@ -1,4 +1,5 @@
 import { createRequire } from "node:module";
+import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { NitroModule } from "nitro/types";
 import { resolveCacheConfig } from "./resolve.ts";
@@ -28,7 +29,7 @@ const trophyCache: NitroModule = {
 
     nitro.options.cache.driver = r.cacheDriver;
     if (r.cacheDriver === "fs") {
-      nitro.options.cache.fs = { dir: r.fsDir } as any;
+      nitro.options.cache.fs = { dir: resolve(nitro.options.rootDir, r.fsDir ?? "") } as any;
     }
     if (r.cacheDriver === "kv" && r.kvMount) {
       const id = r.kvMount.driver;
